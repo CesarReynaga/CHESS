@@ -15,8 +15,8 @@ public class Square
     }
     
     public boolean click(int clickX, int clickY){
-        return (clickX >= x && clickX < x + 30) &&
-           (clickY >= y && clickY < y + 30);
+        return (clickX >= x && clickX < x + 50) &&
+           (clickY >= y && clickY < y + 50);
     }
     
     public Point getPoint(){

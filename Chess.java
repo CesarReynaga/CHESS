@@ -60,7 +60,11 @@ public class Chess extends JPanel{
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                
+                int i = 0;
+                for(Square square : board){
+                    if(square.click(e.getX(), e.getY())) System.out.println("Clicked on square: " + i);
+                    i++;
+                }
             }
         });
         
