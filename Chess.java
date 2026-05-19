@@ -154,10 +154,18 @@ public class Chess extends JPanel{
             String code = square.getSquare();
             if(code.contains("7")) square.setPiece(new Piece("pawn", "black", bp));
             else if(code.contains("2")) square.setPiece(new Piece("pawn", "white", wp));
-
+            else if(code.equals("a8") || code.equals("h8")) square.setPiece(new Piece("rook", "black", br));
+            else if(code.equals("a1") || code.equals("h1")) square.setPiece(new Piece("rook", "white", wr));
+            else if(code.equals("b8") || code.equals("g8")) square.setPiece(new Piece("knight", "black", bn));
+            else if(code.equals("b1") || code.equals("g1")) square.setPiece(new Piece("knight", "white", wn));
+            else if(code.equals("c8") || code.equals("f8")) square.setPiece(new Piece("bishop", "black", bb));
+            else if(code.equals("c1") || code.equals("f1")) square.setPiece(new Piece("bishop", "white", wb));
+            else if(code.equals("e8")) square.setPiece(new Piece("king", "black", bk));
+            else if(code.equals("e1")) square.setPiece(new Piece("king", "white", wk));
+            else if(code.equals("d8")) square.setPiece(new Piece("queen", "black", bq));
+            else if(code.equals("d1")) square.setPiece(new Piece("queen", "white", wq));
         }
     }
-
     public void drawBoard(Graphics g){
         boolean toggle = false;
         int count = 0;
