@@ -15,6 +15,10 @@ public class Piece {
         return type;
     }
 
+    public BufferedImage getImage(){
+        return image;
+    }
+
     public void setType(String type){
         this.type = type;
     }

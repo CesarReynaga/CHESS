@@ -10,6 +10,7 @@ public class Square
     private int x;
     private int y;
     private String square;
+    private Piece piece = null;
     public Square(int x , int y){
         this.x = x;
         this.y = y;
@@ -25,6 +26,18 @@ public class Square
         return square;
     }
     
+    public void setPiece(Piece piece){
+        this.piece = piece;
+    }
+
+    public void removePiece(){
+        piece = null;
+    }
+
+    public Piece getPiece(){
+        return piece;
+    }
+
     public void setSquare(String set){
         square = set;
     }

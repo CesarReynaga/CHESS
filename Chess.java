@@ -70,6 +70,7 @@ public class Chess extends JPanel{
         
         makeBoard();
         labelBoard();
+        initPieces();
         Timer timer = new Timer(16, e -> {
             repaint();
         });
@@ -147,6 +148,16 @@ public class Chess extends JPanel{
             count++;
         }
     }
+
+    public void initPieces(){
+        for(Square square : board){
+            String code = square.getSquare();
+            if(code.contains("7")) square.setPiece(new Piece("pawn", "black", bp));
+            else if(code.contains("2")) square.setPiece(new Piece("pawn", "white", wp));
+
+        }
+    }
+
     public void drawBoard(Graphics g){
         boolean toggle = false;
         int count = 0;
@@ -159,6 +170,7 @@ public class Chess extends JPanel{
             g.fillRect(square.getX(), square.getY(), 80, 80);
             g.setColor(Color.BLACK);
             g.drawRect(square.getX(), square.getY(), 80, 80);
+            if(square.getPiece() != null) g.drawImage(square.getPiece().getImage(), square.getX(), square.getY(), 80, 80, null);
         }
     }
     
