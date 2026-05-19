@@ -27,6 +27,8 @@ public class Chess extends JPanel{
     BufferedImage bb;
     BufferedImage bq;
     BufferedImage bk;
+    Square first = null;
+    Square second = null;
     ArrayList<Square> board = new ArrayList<Square>();
     public Chess() {
         try{
@@ -61,8 +63,20 @@ public class Chess extends JPanel{
             @Override
             public void mouseClicked(MouseEvent e) {
                 int i = 0;
+                int clickCount = 0;
                 for(Square square : board){
-                    if(square.click(e.getX(), e.getY())) System.out.println("Clicked on square: " + square.getSquare());
+                    if(square.click(e.getX(), e.getY())){ 
+                        clickCount++;
+                        System.out.println("Clicked on square: " + square.getSquare());
+                        if(second == null && first == null) first = square;
+                        else if(first!= null) second = square;
+                        if(second != null){
+                            second.setPiece(first.getPiece());
+                            first.removePiece();
+                            second = null;
+                            first = null;
+                        }
+                    }
                     i++;
                 }
             }
