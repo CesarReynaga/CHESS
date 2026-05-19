@@ -1,0 +1,23 @@
+#BlueJ class context
+comment0.target=Chess
+comment1.params=
+comment1.target=Chess()
+comment10.params=
+comment10.target=int\ getHighScore()
+comment2.params=e
+comment2.target=void\ keyPressed(java.awt.event.KeyEvent)
+comment3.params=e
+comment3.target=void\ keyReleased(java.awt.event.KeyEvent)
+comment4.params=e
+comment4.target=void\ mouseClicked(java.awt.event.MouseEvent)
+comment5.params=g
+comment5.target=void\ paintComponent(java.awt.Graphics)
+comment6.params=args
+comment6.target=void\ main(java.lang.String[])
+comment7.params=g
+comment7.target=void\ drawBoard(java.awt.Graphics)
+comment8.params=
+comment8.target=void\ makeBoard()
+comment9.params=high
+comment9.target=void\ writeHighScore(int)
+numComments=11

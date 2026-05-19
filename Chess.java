@@ -1,0 +1,164 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.awt.Font;
+import java.io.IOException;
+import java.util.Scanner;
+import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.awt.Point.*;
+import java.awt.event.*;
+public class Chess extends JPanel{
+    boolean keyPressed = false;
+    BufferedImage wp;
+    BufferedImage wr;
+    BufferedImage wn;
+    BufferedImage wb;
+    BufferedImage wq;
+    BufferedImage wk;
+    BufferedImage bp;
+    BufferedImage br;
+    BufferedImage bn;
+    BufferedImage bb;
+    BufferedImage bq;
+    BufferedImage bk;
+    ArrayList<Square> board = new ArrayList<Square>();
+    public Chess() {
+        try{
+            wp = ImageIO.read(new File("wPawn.png"));
+            wr = ImageIO.read(new File("wRook.png"));
+            wn = ImageIO.read(new File("wKnight.png"));
+            wb = ImageIO.read(new File("wBishop.png"));
+            wq = ImageIO.read(new File("wQueen.png"));
+            wk = ImageIO.read(new File("wKing.png"));
+            bp = ImageIO.read(new File("bPawn.png"));
+            br = ImageIO.read(new File("bRook.png"));
+            bn = ImageIO.read(new File("bKnight.png"));
+            bb = ImageIO.read(new File("bBishop.png"));
+            bq = ImageIO.read(new File("bQueen.png"));
+            bk = ImageIO.read(new File("bKing.png"));
+        }catch (IOException e){
+            System.out.println(e.getMessage());
+        }
+        setFocusable(true);
+        addKeyListener(new KeyAdapter() 
+        {
+            public void keyPressed(KeyEvent e) {
+                keyPressed = true;
+            }
+            
+            public void keyReleased(KeyEvent e) {
+                keyPressed = false;
+            }
+        });
+        
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                
+            }
+        });
+        
+        makeBoard();
+        Timer timer = new Timer(16, e -> {
+            repaint();
+        });
+        
+        timer.start();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        
+        super.paintComponent(g);
+        drawBoard(g);
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("MOVING SHIT");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 800);
+        frame.add(new Chess());
+ 
+        frame.setVisible(true);
+    }
+    
+    public void drawBoard(Graphics g){
+        boolean toggle = false;
+        int count = 0;
+        for(Square square : board){
+            if(!toggle) g.setColor(new Color(173, 216, 230));
+            else g.setColor(new Color(120, 140, 160));
+            count++;
+            if(count != 8)toggle = !toggle;
+            else count = 0;
+            g.fillRect(square.getX(), square.getY(), 50, 50);
+            g.setColor(Color.BLACK);
+            g.drawRect(square.getX(), square.getY(), 50, 50);
+        }
+    }
+    
+    public void makeBoard(){
+        int blockWidth = 50;
+        int blockHeight = 50;
+        int gridWidth = 8 * blockWidth;
+        int gridHeight = 8 * blockHeight;
+        int startX = ((800 - gridWidth) / 2);
+        int startY = ((800 - gridHeight) / 2);
+        for(int i = 0; i < 8; i++){
+            for(int j = 0; j < 8; j++){
+                board.add(new Square((i * 50) + startX, (j * 50) + startY));
+            }
+        }
+
+    }
+    
+    public static void writeHighScore(int high) {
+        int old = 0;
+        try
+        {
+            File file = new File("output.txt");
+            Scanner scanner = new Scanner(file);
+            scanner.next();
+            scanner.next();
+            if(scanner.hasNextInt()) old = scanner.nextInt();
+        }
+        catch(IOException e)
+        {
+            System.err.println("Error writing to file: " + e.getMessage());
+        }
+        if(high > old)
+        {
+            String fileName = "output.txt";
+            String content = ("HIGHEST WPM: " + high + " wpm");
+    
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+                writer.write(content);
+            } catch (IOException e) {
+                System.err.println("Error writing to file: " + e.getMessage());
+            }
+        }
+    }
+    
+    public static int getHighScore()
+    {
+        try
+        {
+            File file = new File("output.txt");
+            Scanner scanner = new Scanner(file);
+            scanner.next();
+            scanner.next();
+            if(scanner.hasNextInt()) return scanner.nextInt();
+        }
+        catch(IOException e)
+        {
+            System.err.println("Error writing to file: " + e.getMessage());
+        }
+        return -1;
+    }
+}
