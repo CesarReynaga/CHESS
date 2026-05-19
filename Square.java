@@ -9,16 +9,26 @@ public class Square
 {
     private int x;
     private int y;
+    private String square;
     public Square(int x , int y){
         this.x = x;
         this.y = y;
+        square = "";
     }
-    
+
     public boolean click(int clickX, int clickY){
-        return (clickX >= x && clickX < x + 50) &&
-           (clickY >= y && clickY < y + 50);
+        return (clickX >= x && clickX < x + 80) &&
+           (clickY >= y && clickY < y + 80);
+    }
+
+    public String getSquare(){
+        return square;
     }
     
+    public void setSquare(String set){
+        square = set;
+    }
+
     public Point getPoint(){
         Point point = new Point(x, y);
         return point;

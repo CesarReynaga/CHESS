@@ -62,13 +62,14 @@ public class Chess extends JPanel{
             public void mouseClicked(MouseEvent e) {
                 int i = 0;
                 for(Square square : board){
-                    if(square.click(e.getX(), e.getY())) System.out.println("Clicked on square: " + i);
+                    if(square.click(e.getX(), e.getY())) System.out.println("Clicked on square: " + square.getSquare());
                     i++;
                 }
             }
         });
         
         makeBoard();
+        labelBoard();
         Timer timer = new Timer(16, e -> {
             repaint();
         });
@@ -91,7 +92,61 @@ public class Chess extends JPanel{
  
         frame.setVisible(true);
     }
-    
+    public void labelBoard(){
+        int num = 0;
+        int[] idk = {8, 7, 6, 5, 4, 3, 2, 1};
+        for(Square square : board){
+            int row = 0;
+            for(int i = 0; i < 8; i++){
+                for(int j = 0; j < 8; j++){
+                    if(num ==(i * 8) + j){
+                        row = idk[j]; 
+                        square.setSquare("" + row);
+                        break;
+                    }
+                }
+            }
+            num++;
+        }
+        int count = 0;
+        String[] flank = {"a", "b", "c", "d", "e", "f", "g", "h"};
+        for(Square square : board){
+            String letter = "";
+            if(count >= 0 && count < 8){ 
+                letter = flank[0];
+            }
+            if(count >= 8 && count < 16){
+                letter = flank[1];
+                
+            }
+            if(count >= 16 && count < 24){
+                letter = flank[2];
+                
+            }
+            if(count >= 24 && count < 32){
+                letter = flank[3];
+                
+            }
+            if(count >= 32 && count < 40){
+                letter = flank[4];
+                
+            }
+            if(count >= 40 && count < 48){
+                letter = flank[5];
+                
+            }
+            if(count >= 48 && count < 56){
+                letter = flank[6];
+                
+            }
+            if(count >= 56 && count < 64){
+                letter = flank[7];
+                
+            }
+            square.setSquare(letter +  square.getSquare());
+            count++;
+        }
+    }
     public void drawBoard(Graphics g){
         boolean toggle = false;
         int count = 0;
@@ -101,22 +156,22 @@ public class Chess extends JPanel{
             count++;
             if(count != 8)toggle = !toggle;
             else count = 0;
-            g.fillRect(square.getX(), square.getY(), 50, 50);
+            g.fillRect(square.getX(), square.getY(), 80, 80);
             g.setColor(Color.BLACK);
-            g.drawRect(square.getX(), square.getY(), 50, 50);
+            g.drawRect(square.getX(), square.getY(), 80, 80);
         }
     }
     
     public void makeBoard(){
-        int blockWidth = 50;
-        int blockHeight = 50;
+        int blockWidth = 80;
+        int blockHeight = 80;
         int gridWidth = 8 * blockWidth;
         int gridHeight = 8 * blockHeight;
         int startX = ((800 - gridWidth) / 2);
         int startY = ((800 - gridHeight) / 2);
         for(int i = 0; i < 8; i++){
             for(int j = 0; j < 8; j++){
-                board.add(new Square((i * 50) + startX, (j * 50) + startY));
+                board.add(new Square((i * 80) + startX, (j * 80) + startY));
             }
         }
 
