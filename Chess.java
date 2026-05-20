@@ -2,10 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+
 import java.util.ArrayList;
-import java.awt.Font;
 import java.io.IOException;
 import java.util.Scanner;
 import java.io.File;
@@ -27,8 +25,10 @@ public class Chess extends JPanel{
     BufferedImage bb;
     BufferedImage bq;
     BufferedImage bk;
+    boolean qPressed = false;
     Square first = null;
     Square second = null;
+    boolean captured = false;
     ArrayList<Square> board = new ArrayList<Square>();
     public Chess() {
         try{
@@ -51,11 +51,11 @@ public class Chess extends JPanel{
         addKeyListener(new KeyAdapter() 
         {
             public void keyPressed(KeyEvent e) {
-                keyPressed = true;
+                if(e.getKeyCode() == KeyEvent.VK_Q) qPressed = true;
             }
             
             public void keyReleased(KeyEvent e) {
-                keyPressed = false;
+                qPressed = false;
             }
         });
         
@@ -68,11 +68,24 @@ public class Chess extends JPanel{
                     if(square.click(e.getX(), e.getY())){ 
                         clickCount++;
                         System.out.println("Clicked on square: " + square.getSquare());
-                        if(second == null && first == null) first = square;
-                        else if(first!= null) second = square;
+                        if(qPressed) square.setPiece(new Piece("queen", "white", wq));
+                        if(second == null && first == null && square.getPiece() != null) first = square;
+                        else if(first!= null && first != square) second = square;
+                        else if(first == square) first = null;
                         if(second != null){
+                            if(second.getPiece() != null) captured = true;
+                            else captured = false;
                             second.setPiece(first.getPiece());
                             first.removePiece();
+                            String piece = second.getPiece().getType();
+                            String p;
+                            if(!piece.equals("knight") && !piece.equals("pawn")) p = piece.charAt(0) + "";
+                            else if(piece.equals("knight")) p = "n";
+                            else if(captured) p = first.getSquare().charAt(0) + "";
+                            else p = "";
+                            if(captured) p += "x";
+                            if(!piece.equals("pawn")) p = p.toUpperCase();
+                            System.out.println(p + second.getSquare());
                             second = null;
                             first = null;
                         }
@@ -184,8 +197,9 @@ public class Chess extends JPanel{
         boolean toggle = false;
         int count = 0;
         for(Square square : board){
-            if(!toggle) g.setColor(new Color(173, 216, 230));
-            else g.setColor(new Color(120, 140, 160));
+            if(!toggle && square != first) g.setColor(new Color(240,217,181));
+            else if(toggle && square != first) g.setColor(new Color(181,136,99));
+            else if(square == first || square == second)g.setColor(new Color(255, 255, 0));
             count++;
             if(count != 8)toggle = !toggle;
             else count = 0;
