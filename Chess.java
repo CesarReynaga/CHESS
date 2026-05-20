@@ -63,12 +63,13 @@ public class Chess extends JPanel{
                     rightPressed = false;
                     leftPressed = false;
                 }
-
+                keyPressed = true;
             }
             
             public void keyReleased(KeyEvent e) {
                 leftPressed = false;
                 rightPressed = false;
+                keyPressed = false;
             }
         });
         
@@ -122,6 +123,7 @@ public class Chess extends JPanel{
         labelBoard();
         initPieces();
         Timer timer = new Timer(16, e -> {
+            if(keyPressed) first = null;
             System.out.println(pastIndex);
             if(leftPressed && history.size() > 0){
                 leftPressed = false;
