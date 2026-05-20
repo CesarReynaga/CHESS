@@ -9,7 +9,7 @@ import java.util.Scanner;
 import java.io.File;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.awt.Point.*;
+import java.util.stream.IntStream;
 import java.awt.event.*;
 public class Chess extends JPanel{
     boolean keyPressed = false;
@@ -26,13 +26,14 @@ public class Chess extends JPanel{
     BufferedImage bq;
     BufferedImage bk;
     boolean qPressed = false;
-    Square first = null;
-    Square second = null;
+    int first = -1;
+    int second = -1;
     boolean captured = false;
     boolean leftPressed = false;
     boolean rightPressed = false;
     boolean inPast = false;
     int pastIndex = 0;
+    int turn = 0;
     List<Square> board = new ArrayList<Square>();
     List<Move> history = new ArrayList<Move>();
     public Chess() {
@@ -83,79 +84,80 @@ public class Chess extends JPanel{
                         clickCount++;
                         System.out.println("Clicked on square: " + square.getSquare());
                         if(qPressed) square.setPiece(new Piece("queen", "white", wq));
-                        if(second == null && first == null && square.getPiece() != null) first = square;
-                        else if(first!= null && first != square) second = square;
-                        else if(first == square) first = null;
-                        if(second != null){
+                        if(second == -1 && first == -1 && square.getPiece() != null) first = i;
+                        else if(first!= -1 && first != i) second = i;
+                        else if(first == i) first = -1;
+                        if(second != -1 && isLegal(first, second, pastIndex, board)){
                             Piece capturedPiece = null;
-                            if(second.getPiece() != null){ captured = true; capturedPiece = second.getPiece();}
+                            if(board.get(second).getPiece() != null){ captured = true; capturedPiece = board.get(second).getPiece();}
                             else captured = false;
-                            second.setPiece(first.getPiece());
-                            first.removePiece();
-                            String piece = second.getPiece().getType();
+                            board.get(second).setPiece(board.get(first).getPiece());
+                            board.get(first).removePiece();
+                            String piece = board.get(second).getPiece().getType();
                             String p;
                             if(!piece.equals("knight") && !piece.equals("pawn")) p = piece.charAt(0) + "";
                             else if(piece.equals("knight")) p = "n";
-                            else if(captured) p = first.getSquare().charAt(0) + "";
+                            else if(captured) p = board.get(first).getSquare().charAt(0) + "";
                             else p = "";
                             if(captured) p += "x";
                             if(!piece.equals("pawn")) p = p.toUpperCase();
-                            System.out.println(p + second.getSquare());
+                            System.out.println(p + board.get(second).getSquare());
                             if(inPast){
                                 while(history.size() > pastIndex){
                                     history.remove(history.size() - 1);
                                 }
                             }
-                            if(!captured)history.add(new Move(first, square, second.getPiece()));
-                            else if(captured)history.add(new Move(first, square, second.getPiece(), capturedPiece));
+                            if(!captured)history.add(new Move(first, second, board.get(second).getPiece()));
+                            else if(captured)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece));
                             
-                            second = null;
-                            first = null;
+                            second = -1;
+                            first = -1;
                             pastIndex++;
-                        }
+                            flipBoard();
+                        }else if(second != -1){ second = -1; first = -1;}
                     }
                     i++;
                 }
             }
         });
         
-        makeBoard();
+        makeBoard(board);
         labelBoard();
         initPieces();
         Timer timer = new Timer(16, e -> {
-            if(keyPressed) first = null;
-            System.out.println(pastIndex);
+            if(keyPressed) first = -1;
             if(leftPressed && history.size() > 0){
+                flipBoard();
                 leftPressed = false;
                 if(pastIndex == 0) return;
                 int index = pastIndex - 1;
-                System.out.println("index _" + index);
                 Move move = history.get(index);
-                Square second = null;
-                Square first = null;
+                int second = -1;
+                int first = -1;
                 for(Square square : board){
-                    if(square == move.getStart()) first = square;
-                    if(square == move.getEnd()) second = square;
+                    if(board.indexOf(square) == move.getStart()) first = board.indexOf(square);
+                    if(board.indexOf(square) == move.getEnd()) second = board.indexOf(square);
                 }
-                first.setPiece(second.getPiece());
-                if(move.getCaptured() == null) second.removePiece();
-                else second.setPiece(move.getCaptured());
+                board.get(first).setPiece(board.get(second).getPiece());
+                if(move.getCaptured() == null) board.get(second).removePiece();
+                else board.get(second).setPiece(move.getCaptured());
                 inPast = pastIndex > 0;
                 pastIndex--;
             }
             if(rightPressed && inPast){
+                flipBoard();
                 rightPressed = false;
                 if(pastIndex >= history.size()) return;
                 //pastIndex++;
                 Move move = history.get(pastIndex);
-                Square second = null;
-                Square first = null;
+                int second = -1;
+                int first = -1;
                 for(Square square : board){
-                    if(square == move.getStart()) second = square;
-                    if(square == move.getEnd()) first = square;
+                    if(board.indexOf(square) == move.getStart()) first = board.indexOf(square);
+                    if(board.indexOf(square) == move.getEnd()) second = board.indexOf(square);
                 }
-                first.setPiece(second.getPiece());
-                second.removePiece();
+                board.get(first).setPiece(board.get(second).getPiece());
+                board.get(second).removePiece();
                 pastIndex++;
 
             }
@@ -180,6 +182,25 @@ public class Chess extends JPanel{
  
         frame.setVisible(true);
     }
+
+    public static boolean isLegal(int first, int second, int pastIndex, List<Square> board){
+        String piece = board.get(first).getPiece().getType();
+        String color = board.get(first).getPiece().getColor();
+        if(color.equals("white") && pastIndex % 2 == 0) return true;
+        else if(color.equals("black") && pastIndex % 2 == 1) return true;
+        else return false;
+    }
+
+    public void flipBoard(){
+        List<Square> flipped = new ArrayList<Square>();
+        makeBoard(flipped);
+        for(int i = 0; i < board.size(); i++){
+            flipped.get(63-i).setPiece(board.get(i).getPiece());
+            flipped.get(63-i).setSquare(board.get(i).getSquare());
+        }
+        board = flipped;
+    }
+
     public void labelBoard(){
         int num = 0;
         int[] idk = {8, 7, 6, 5, 4, 3, 2, 1};
@@ -257,9 +278,9 @@ public class Chess extends JPanel{
         boolean toggle = false;
         int count = 0;
         for(Square square : board){
-            if(!toggle && square != first) g.setColor(new Color(240,217,181));
-            else if(toggle && square != first) g.setColor(new Color(181,136,99));
-            else if(square == first || square == second)g.setColor(new Color(255, 255, 0));
+            if(!toggle && board.indexOf(square) != first) g.setColor(new Color(240,217,181));
+            else if(toggle && board.indexOf(square) != first) g.setColor(new Color(181,136,99));
+            else if(board.indexOf(square) == first || board.indexOf(square) == second)g.setColor(new Color(255, 255, 0));
             count++;
             if(count != 8)toggle = !toggle;
             else count = 0;
@@ -270,7 +291,7 @@ public class Chess extends JPanel{
         }
     }
     
-    public void makeBoard(){
+    public void makeBoard(List<Square> board){
         int blockWidth = 80;
         int blockHeight = 80;
         int gridWidth = 8 * blockWidth;
