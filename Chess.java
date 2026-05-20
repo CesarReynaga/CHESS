@@ -26,6 +26,7 @@ public class Chess extends JPanel{
     BufferedImage bq;
     BufferedImage bk;
     boolean qPressed = false;
+    boolean isFlipped = false;
     int first = -1;
     int second = -1;
     boolean captured = false;
@@ -81,6 +82,7 @@ public class Chess extends JPanel{
                 int clickCount = 0;
                 for(Square square : board){
                     if(square.click(e.getX(), e.getY())){ 
+                        System.out.println("Clicked on square index: " + i);
                         clickCount++;
                         System.out.println("Clicked on square: " + square.getSquare());
                         if(qPressed) square.setPiece(new Piece("queen", "white", wq));
@@ -107,9 +109,10 @@ public class Chess extends JPanel{
                                     history.remove(history.size() - 1);
                                 }
                             }
-                            if(!captured)history.add(new Move(first, second, board.get(second).getPiece()));
-                            else if(captured)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece));
-                            
+                            if(!captured && !isFlipped)history.add(new Move(first, second, board.get(second).getPiece()));
+                            else if(captured && !isFlipped)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece));
+                            else if(!captured && isFlipped)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece()));
+                            else if(captured && isFlipped)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece(), capturedPiece));
                             second = -1;
                             first = -1;
                             pastIndex++;
@@ -127,16 +130,19 @@ public class Chess extends JPanel{
         Timer timer = new Timer(16, e -> {
             if(keyPressed) first = -1;
             if(leftPressed && history.size() > 0){
-                flipBoard();
                 leftPressed = false;
                 if(pastIndex == 0) return;
+                flipBoard();
                 int index = pastIndex - 1;
                 Move move = history.get(index);
                 int second = -1;
                 int first = -1;
-                for(Square square : board){
-                    if(board.indexOf(square) == move.getStart()) first = board.indexOf(square);
-                    if(board.indexOf(square) == move.getEnd()) second = board.indexOf(square);
+                if(isFlipped){
+                    first = 63 - move.getStart();
+                    second = 63 - move.getEnd();
+                }else{
+                    first = move.getStart();
+                    second = move.getEnd();
                 }
                 board.get(first).setPiece(board.get(second).getPiece());
                 if(move.getCaptured() == null) board.get(second).removePiece();
@@ -145,19 +151,23 @@ public class Chess extends JPanel{
                 pastIndex--;
             }
             if(rightPressed && inPast){
-                flipBoard();
                 rightPressed = false;
                 if(pastIndex >= history.size()) return;
+                flipBoard();
                 //pastIndex++;
                 Move move = history.get(pastIndex);
                 int second = -1;
                 int first = -1;
-                for(Square square : board){
-                    if(board.indexOf(square) == move.getStart()) first = board.indexOf(square);
-                    if(board.indexOf(square) == move.getEnd()) second = board.indexOf(square);
+                if(isFlipped){
+                    second = 63 - move.getStart();
+                    first = 63 - move.getEnd();
+                }else{
+                    second = move.getStart();
+                    first = move.getEnd();
                 }
                 board.get(first).setPiece(board.get(second).getPiece());
-                board.get(second).removePiece();
+                if(move.getCaptured() == null) board.get(second).removePiece();
+                else board.get(second).setPiece(move.getCaptured());
                 pastIndex++;
 
             }
@@ -199,6 +209,7 @@ public class Chess extends JPanel{
             flipped.get(63-i).setSquare(board.get(i).getSquare());
         }
         board = flipped;
+        isFlipped = !isFlipped;
     }
 
     public void labelBoard(){
