@@ -230,6 +230,9 @@ public class Chess extends JPanel{
     public static boolean isLegal(int first, int second, int pastIndex, List<Square> board, List<Move> history, boolean isFlipped){
         String piece = board.get(first).getPiece().getType();
         String color = board.get(first).getPiece().getColor();
+        if(board.get(second).getPiece() != null){
+            if(board.get(second).getPiece().getColor().equals(color)) return false;
+        }
         //top right  +7
         //top left  -9
         //bottom right  +9
@@ -270,13 +273,74 @@ public class Chess extends JPanel{
                 else if(second == first - 2 && board.get(second).getPiece() == null && board.get(first - 1).getPiece() == null && (Integer.parseInt(board.get(first).getSquare().charAt(1) + "") == 2 || (Integer.parseInt(board.get(first).getSquare().charAt(1) + "") == 7))) return true;
                 
                 return false;
+            }else if(piece.equals("knight")){
+                //knight moves in 'L's
+                //high right +6
+                //low right +15
+                //high left -10
+                //low left -17
+                if(second == first + 6 ) return true;
+                else if(second == first + 15 ) return true;
+                else if(second == first + -10 ) return true;
+                else if(second == first + -17) return true;
+                else return false;
+            }else if(piece.equals("bishop")){
+                //bishop only moves diagonally
+                //left up -9
+                //right up +7
+                //left down -7
+                //right down +9
+                boolean diag = false;
+                String[] alph = {"a", "b", "c", "d", "e" ,"f", "g", "h"};
+                String secondSquare = board.get(second).getSquare();
+                int secondRow = indexOf(alph, secondSquare.charAt(0) + "");
+                int secondCol = Integer.parseInt(secondSquare.charAt(1) + "");
+                String firstSquare = board.get(first).getSquare();
+                int firstRow = indexOf(alph, firstSquare.charAt(0) + "");
+                int firstCol = Integer.parseInt(firstSquare.charAt(1) + "");
+                int colDiff = Math.abs(secondCol - firstCol);
+                int rowDiff = Math.abs(secondRow - firstRow);
+                if(colDiff == rowDiff) diag = true;
+                if(diag){
+                    int col = firstCol;
+                    int row = firstRow;
+                    String notation1 = "";
+                    int cStep = 0;
+                    int rStep = 0;
+                    if(firstCol < secondCol)cStep = 1;
+                        else cStep = -1;
+                        if(firstRow < secondRow) rStep=1;
+                        else rStep = -1;
+                    while(col != secondCol || row != secondRow){
+                        row+=rStep;
+                        col+=cStep;
+                        notation1 = alph[row] + col;
+                        Square check1 = null;
+                        for(Square square : board){
+                            if(square.getSquare().equals(notation1))check1 = square;
+                        }
+                        if(check1.equals(board.get(second))){
+                            if(check1.getPiece() != null) return true;
+                        }
+                        if(check1.getPiece() != null) return false;
+                    }
+                    return true;
+                }
+                else return false;
+                
             }
             return true;
         }
-        else if(piece.equals("knight")) return true;
         return false;
     }
-
+    public static int indexOf(String[] arr, String target){
+        int count = 0;
+        for(String value : arr){
+            if(value.equals(target)) return count;
+            count++;
+        }
+        return -1;
+    }
     public void flipBoard(){
         List<Square> flipped = new ArrayList<Square>();
         makeBoard(flipped);
