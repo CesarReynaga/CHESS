@@ -35,8 +35,12 @@ public class Chess extends JPanel{
     boolean inPast = false;
     int pastIndex = 0;
     int turn = 0;
+    static int lastEnd = 0;
+    boolean upPressed = false;
     List<Square> board = new ArrayList<Square>();
     List<Move> history = new ArrayList<Move>();
+    static boolean enPassant = false;
+    boolean cPressed = false;
     public Chess() {
         try{
             wp = ImageIO.read(new File("wPawn.png"));
@@ -61,15 +65,21 @@ public class Chess extends JPanel{
             public void keyPressed(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_LEFT) leftPressed = true;
                 else if(e.getKeyCode() == KeyEvent.VK_RIGHT) rightPressed = true;
+                else if(e.getKeyCode() == KeyEvent.VK_C) cPressed = true;
+                else if(e.getKeyCode() == KeyEvent.VK_UP) upPressed = true;
                 else{
                     rightPressed = false;
                     leftPressed = false;
+                    cPressed = false;
+                    upPressed = false;
                 }
                 keyPressed = true;
             }
             
             public void keyReleased(KeyEvent e) {
                 leftPressed = false;
+                cPressed = false;
+                upPressed = false;
                 rightPressed = false;
                 keyPressed = false;
             }
@@ -89,12 +99,13 @@ public class Chess extends JPanel{
                         if(second == -1 && first == -1 && square.getPiece() != null) first = i;
                         else if(first!= -1 && first != i) second = i;
                         else if(first == i) first = -1;
-                        if(second != -1 && isLegal(first, second, pastIndex, board)){
+                        if(second != -1 && (isLegal(first, second, pastIndex, board, history, isFlipped) || cPressed)){
                             Piece capturedPiece = null;
-                            if(board.get(second).getPiece() != null){ captured = true; capturedPiece = board.get(second).getPiece();}
+                            if(board.get(second).getPiece() != null || enPassant){captured = true; if(enPassant)capturedPiece = pastIndex % 2 == 0 ? new Piece("pawn", "black", bp) : new Piece("pawn", "white", wp); else capturedPiece = board.get(second).getPiece();}
                             else captured = false;
                             board.get(second).setPiece(board.get(first).getPiece());
                             board.get(first).removePiece();
+                            if(enPassant) board.get(lastEnd).removePiece();
                             String piece = board.get(second).getPiece().getType();
                             String p;
                             if(!piece.equals("knight") && !piece.equals("pawn")) p = piece.charAt(0) + "";
@@ -109,14 +120,17 @@ public class Chess extends JPanel{
                                     history.remove(history.size() - 1);
                                 }
                             }
-                            if(!captured && !isFlipped)history.add(new Move(first, second, board.get(second).getPiece()));
-                            else if(captured && !isFlipped)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece));
-                            else if(!captured && isFlipped)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece()));
-                            else if(captured && isFlipped)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece(), capturedPiece));
+                            if(!captured && !isFlipped && !cPressed && !enPassant)history.add(new Move(first, second, board.get(second).getPiece()));
+                            else if(captured && !isFlipped && !cPressed && !enPassant)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece));
+                            else if(captured && !isFlipped && !cPressed && enPassant)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece, "enPassant"));
+                            else if(!captured && isFlipped && !cPressed && !enPassant)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece()));
+                            else if(captured && isFlipped && !cPressed && !enPassant)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece(), capturedPiece));
+                            else if(captured && isFlipped && !cPressed && enPassant)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece, "enPassant"));
+
                             second = -1;
                             first = -1;
-                            pastIndex++;
-                            flipBoard();
+                            if(!cPressed)pastIndex++;
+                            if(!cPressed)flipBoard();
                         }else if(second != -1){ second = -1; first = -1;}
                     }
                     i++;
@@ -128,47 +142,20 @@ public class Chess extends JPanel{
         labelBoard();
         initPieces();
         Timer timer = new Timer(16, e -> {
-            if(keyPressed) first = -1;
+            if(keyPressed && !cPressed) first = -1;
+            if(upPressed && history.size() > 0){
+                upPressed = false;
+                for(int i = pastIndex; i < history.size(); i++){
+                    redo();
+                }
+                
+            }
             if(leftPressed && history.size() > 0){
                 leftPressed = false;
-                if(pastIndex == 0) return;
-                flipBoard();
-                int index = pastIndex - 1;
-                Move move = history.get(index);
-                int second = -1;
-                int first = -1;
-                if(isFlipped){
-                    first = 63 - move.getStart();
-                    second = 63 - move.getEnd();
-                }else{
-                    first = move.getStart();
-                    second = move.getEnd();
-                }
-                board.get(first).setPiece(board.get(second).getPiece());
-                if(move.getCaptured() == null) board.get(second).removePiece();
-                else board.get(second).setPiece(move.getCaptured());
-                inPast = pastIndex > 0;
-                pastIndex--;
+                undo();
             }
             if(rightPressed && inPast){
-                rightPressed = false;
-                if(pastIndex >= history.size()) return;
-                flipBoard();
-                //pastIndex++;
-                Move move = history.get(pastIndex);
-                int second = -1;
-                int first = -1;
-                if(isFlipped){
-                    second = 63 - move.getStart();
-                    first = 63 - move.getEnd();
-                }else{
-                    second = move.getStart();
-                    first = move.getEnd();
-                }
-                board.get(first).setPiece(board.get(second).getPiece());
-                if(move.getCaptured() == null) board.get(second).removePiece();
-                else board.get(second).setPiece(move.getCaptured());
-                pastIndex++;
+                redo();
 
             }
             repaint();
@@ -193,12 +180,102 @@ public class Chess extends JPanel{
         frame.setVisible(true);
     }
 
-    public static boolean isLegal(int first, int second, int pastIndex, List<Square> board){
+    public void redo(){
+        rightPressed = false;
+                if(pastIndex >= history.size()) return;
+                flipBoard();
+                //pastIndex++;
+                Move move = history.get(pastIndex);
+                int second = -1;
+                int first = -1;
+                if(isFlipped){
+                    first = 63 - move.getStart();
+                    second = 63 - move.getEnd();
+                }else{
+                    first = move.getStart();
+                    second = move.getEnd();
+                }
+                if(move.getType().equals("enPassant")) board.get(second - 1).removePiece();
+                board.get(second).setPiece(board.get(first).getPiece());
+                board.get(first).removePiece();
+                pastIndex++;
+    }
+
+    public void undo(){
+        if(pastIndex == 0) return;
+                flipBoard();
+                int index = pastIndex - 1;
+                Move move = history.get(index);
+                int second = -1;
+                int first = -1;
+                if(isFlipped){
+                    first = 63 - move.getStart();
+                    second = 63 - move.getEnd();
+                }else{
+                    first = move.getStart();
+                    second = move.getEnd();
+                }
+                board.get(first).setPiece(board.get(second).getPiece());
+                if(move.getType().equals("enPassant")){
+                    board.get(second).removePiece();
+                    board.get(second + 1).setPiece(move.getCaptured());
+                }
+                else if(move.getCaptured() == null) board.get(second).removePiece();
+                else { board.get(second).setPiece(move.getCaptured()); System.out.println("not enPassant");}
+                //System.out.println(move.getType() + move.getType().equals("enPassant"));
+                inPast = pastIndex > 0;
+                pastIndex--;
+    }
+
+    public static boolean isLegal(int first, int second, int pastIndex, List<Square> board, List<Move> history, boolean isFlipped){
         String piece = board.get(first).getPiece().getType();
         String color = board.get(first).getPiece().getColor();
-        if(color.equals("white") && pastIndex % 2 == 0) return true;
-        else if(color.equals("black") && pastIndex % 2 == 1) return true;
-        else return false;
+        //top right  +7
+        //top left  -9
+        //bottom right  +9
+        //bottom left -7
+        if((color.equals("white") && pastIndex % 2 == 0) || (color.equals("black") && pastIndex % 2 == 1)){
+            if(piece.equals("pawn")){
+                //pawn cant move backwards
+                //pawn only moves diagonally if its capturing / en passant
+                enPassant = false;
+                if(color.equals("black") && history.size() > 0){
+                    Move lastMove = history.get(history.size() - 1);
+                    int lastStart = 63 - lastMove.getStart();
+                    lastEnd = 63 - lastMove.getEnd();
+                    String lastPiece = lastMove.getPiece().getType();
+                    int lastDiff = Math.abs(lastStart - lastEnd);
+                    if(lastPiece.equals("pawn") &&
+                    lastDiff == 2 &&
+                    second == lastEnd - 1)
+                    {
+                        enPassant = true;
+                    }
+                }else if (history.size() > 0){
+                    Move lastMove = history.get(history.size() - 1);
+                    int lastStart = lastMove.getStart();
+                    lastEnd = lastMove.getEnd();
+                    String lastPiece = lastMove.getPiece().getType();
+                    int lastDiff = Math.abs(lastStart - lastEnd);
+                    if(lastPiece.equals("pawn") &&
+                    lastDiff == 2 &&
+                    second == lastEnd - 1)
+                    {
+                        enPassant = true;
+                    }
+                }
+                if(second == first + 7 && (board.get(second).getPiece() != null || enPassant)){ return true;}
+                else if(second == first - 9 && (board.get(second).getPiece() != null || enPassant)){ return true;}
+                //only move forward if piece is not in the way / first pawn move
+                else if(second == first - 1 && board.get(second).getPiece() == null) return true;
+                else if(second == first - 2 && board.get(second).getPiece() == null && board.get(first - 1).getPiece() == null && (Integer.parseInt(board.get(first).getSquare().charAt(1) + "") == 2 || (Integer.parseInt(board.get(first).getSquare().charAt(1) + "") == 7))) return true;
+                
+                return false;
+            }
+            return true;
+        }
+        else if(piece.equals("knight")) return true;
+        return false;
     }
 
     public void flipBoard(){
@@ -299,6 +376,15 @@ public class Chess extends JPanel{
             g.setColor(Color.BLACK);
             g.drawRect(square.getX(), square.getY(), 80, 80);
             if(square.getPiece() != null) g.drawImage(square.getPiece().getImage(), square.getX(), square.getY(), 80, 80, null);
+            if(first != -1 && board.get(first).getPiece() != null){
+                if(board.indexOf(square) != first){
+                    if(isLegal(first, board.indexOf(square), pastIndex, board, history, isFlipped)){
+                        g.setColor(Color.lightGray);
+                        int size = 20;
+                        g.fillOval(square.getX() + (80/2 - size/2), square.getY() + (80/2 - size/2), size, size);
+                    }
+                }
+            }
         }
     }
     
