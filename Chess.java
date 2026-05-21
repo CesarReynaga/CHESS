@@ -468,7 +468,6 @@ public class Chess extends JPanel{
                 }else return false;
             }else if(piece.equals("king")){
                 int firstRow = indexOf(alph, board.get(first).getSquare().charAt(0) + "");
-                System.out.println(firstRow + "nigger");
                 int firstCol = Integer.parseInt(board.get(first).getSquare().charAt(1) + "");
                 int secondRow = indexOf(alph, board.get(second).getSquare().charAt(0) + "");
                 int secondCol = Integer.parseInt(board.get(second).getSquare().charAt(1) + "");
