@@ -238,7 +238,6 @@ public class Chess extends JPanel{
             if(piece.equals("pawn")){
                 //pawn cant move backwards
                 //pawn only moves diagonally if its capturing / en passant
-                enPassant = false;
                 if(color.equals("black") && history.size() > 0){
                     Move lastMove = history.get(history.size() - 1);
                     int lastStart = 63 - lastMove.getStart();
@@ -250,9 +249,9 @@ public class Chess extends JPanel{
                     second == lastEnd - 1)
                     {
                         enPassant = true;
-                    }
+                    }else enPassant = false;
                 }else if (history.size() > 0){
-                    Move lastMove = history.get(history.size() - 1);
+                    Move lastMove = history.get(pastIndex - 1);
                     int lastStart = lastMove.getStart();
                     lastEnd = lastMove.getEnd();
                     String lastPiece = lastMove.getPiece().getType();
@@ -262,7 +261,7 @@ public class Chess extends JPanel{
                     second == lastEnd - 1)
                     {
                         enPassant = true;
-                    }
+                    }else enPassant = false;
                 }
                 if(second == first + 7 && (board.get(second).getPiece() != null || enPassant)){ return true;}
                 else if(second == first - 9 && (board.get(second).getPiece() != null || enPassant)){ return true;}
