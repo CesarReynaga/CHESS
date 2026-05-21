@@ -233,13 +233,13 @@ public class Chess extends JPanel{
         if(board.get(second).getPiece() != null){
             if(board.get(second).getPiece().getColor().equals(color)) return false;
         }
-        //top right  +7
-        //top left  -9
-        //bottom right  +9
-        //bottom left -7
         if((color.equals("white") && pastIndex % 2 == 0) || (color.equals("black") && pastIndex % 2 == 1)){
             if(piece.equals("pawn")){
                 //pawn cant move backwards
+                //top right  +7
+                //top left  -9
+                //bottom right  +9
+                //bottom left -7
                 //pawn only moves diagonally if its capturing / en passant
                 if(color.equals("black") && history.size() > 0){
                     Move lastMove = history.get(history.size() - 1);
@@ -253,7 +253,7 @@ public class Chess extends JPanel{
                     {
                         enPassant = true;
                     }else enPassant = false;
-                }else if (history.size() > 0){
+                }else if (pastIndex > 0){
                     Move lastMove = history.get(pastIndex - 1);
                     int lastStart = lastMove.getStart();
                     lastEnd = lastMove.getEnd();
@@ -286,10 +286,6 @@ public class Chess extends JPanel{
                 else return false;
             }else if(piece.equals("bishop")){
                 //bishop only moves diagonally
-                //left up -9
-                //right up +7
-                //left down -7
-                //right down +9
                 boolean diag = false;
                 String[] alph = {"a", "b", "c", "d", "e" ,"f", "g", "h"};
                 String secondSquare = board.get(second).getSquare();
@@ -302,6 +298,7 @@ public class Chess extends JPanel{
                 int rowDiff = Math.abs(secondRow - firstRow);
                 if(colDiff == rowDiff) diag = true;
                 if(diag){
+                    //bishop cannot move through pieces
                     int col = firstCol;
                     int row = firstRow;
                     String notation1 = "";
@@ -319,9 +316,11 @@ public class Chess extends JPanel{
                         for(Square square : board){
                             if(square.getSquare().equals(notation1))check1 = square;
                         }
+                        //making sure you can capture
                         if(check1.equals(board.get(second))){
                             if(check1.getPiece() != null) return true;
                         }
+                        //cant go though pieces
                         if(check1.getPiece() != null) return false;
                     }
                     return true;
