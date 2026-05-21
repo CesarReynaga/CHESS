@@ -27,6 +27,7 @@ public class Chess extends JPanel{
     BufferedImage bk;
     boolean qPressed = false;
     boolean isFlipped = false;
+    static final String[] alph = {"a", "b", "c", "d", "e" ,"f", "g", "h"};
     int first = -1;
     int second = -1;
     boolean captured = false;
@@ -172,7 +173,7 @@ public class Chess extends JPanel{
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("MOVING SHIT");
+        JFrame frame = new JFrame("CHESSY");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 800);
         frame.add(new Chess());
@@ -287,7 +288,6 @@ public class Chess extends JPanel{
             }else if(piece.equals("bishop")){
                 //bishop only moves diagonally
                 boolean diag = false;
-                String[] alph = {"a", "b", "c", "d", "e" ,"f", "g", "h"};
                 String secondSquare = board.get(second).getSquare();
                 int secondRow = indexOf(alph, secondSquare.charAt(0) + "");
                 int secondCol = Integer.parseInt(secondSquare.charAt(1) + "");
@@ -327,6 +327,145 @@ public class Chess extends JPanel{
                 }
                 else return false;
                 
+            }else if(piece.equals("rook")){
+                boolean straight = false;
+                String secRow = board.get(second).getSquare().charAt(0) + "";
+                int secCol = Integer.parseInt(board.get(second).getSquare().charAt(1) + "");
+                String firstRow = board.get(first).getSquare().charAt(0) + "";
+                int firstCol = Integer.parseInt(board.get(first).getSquare().charAt(1) + "");
+                if(secRow.equals(firstRow) || secCol == firstCol) straight = true;
+                if(straight){
+                    if(firstCol != secCol){
+                        int col = firstCol;
+                        int row = indexOf(alph, firstRow);
+                        int colDiff = 0;
+                        String notation = "";
+                        if(col < secCol) colDiff = 1;
+                        else colDiff = -1;
+                        while(col != secCol){
+                            col += colDiff;
+                            notation = alph[row] + col;
+                            Square check = null;
+                            for(Square square : board){
+                                if(square.getSquare().equals(notation)) check = square;
+                            }
+                            if(check.equals(board.get(second))){
+                                if(check.getPiece() != null) return true;
+                            }
+                            //cant go though pieces
+                            if(check.getPiece() != null) return false;
+                        }
+                    }else if(firstCol == secCol){
+                        int row = indexOf(alph,firstRow);
+                        int sec = indexOf(alph, secRow);
+                        int col = firstCol;
+                        int rowDiff = 0;
+                        String notation = "";
+                        if(row < sec)rowDiff = 1;
+                        else rowDiff = -1;
+                        while(row != sec){
+                            row += rowDiff;
+                            notation = alph[row] + col;
+                            Square check = null;
+                            for(Square square : board){
+                                if(square.getSquare().equals(notation)) check= square;
+                            }
+                            if(check.equals(board.get(second))){
+                                if(check.getPiece() != null) return true;
+                            }
+                            //cant go though pieces
+                            if(check.getPiece() != null) return false;
+                        }
+                    }
+                }
+
+                else return false;
+            }else if(piece.equals("queen")){
+                boolean straight = false;
+                String secRow = board.get(second).getSquare().charAt(0) + "";
+                int secCol = Integer.parseInt(board.get(second).getSquare().charAt(1) + "");
+                String firstRow = board.get(first).getSquare().charAt(0) + "";
+                int firstCol = Integer.parseInt(board.get(first).getSquare().charAt(1) + "");
+                if(secRow.equals(firstRow) || secCol == firstCol) straight = true;
+                boolean diag = false;
+                String secondSquare = board.get(second).getSquare();
+                int secondRow = indexOf(alph, secondSquare.charAt(0) + "");
+                int secondCol = Integer.parseInt(secondSquare.charAt(1) + "");
+                String firstSquare = board.get(first).getSquare();
+                int fr = indexOf(alph, firstSquare.charAt(0) + "");
+                int colDiff = Math.abs(secondCol - firstCol);
+                int rowDiff = Math.abs(secondRow - fr);
+                if(colDiff == rowDiff) diag = true;
+                if(straight){
+                    if(firstCol != secCol){
+                        int col = firstCol;
+                        int row = indexOf(alph, firstRow);
+                        int cDiff = 0;
+                        String notation = "";
+                        if(col < secCol) cDiff = 1;
+                        else cDiff = -1;
+                        while(col != secCol){
+                            col += cDiff;
+                            notation = alph[row] + col;
+                            Square check = null;
+                            for(Square square : board){
+                                if(square.getSquare().equals(notation)) check = square;
+                            }
+                            if(check.equals(board.get(second))){
+                                if(check.getPiece() != null) return true;
+                            }
+                            //cant go though pieces
+                            if(check.getPiece() != null) return false;
+                        }
+                    }else if(firstCol == secCol){
+                        int row = indexOf(alph,firstRow);
+                        int sec = indexOf(alph, secRow);
+                        int col = firstCol;
+                        int rDiff = 0;
+                        String notation = "";
+                        if(row < sec)rDiff = 1;
+                        else rDiff = -1;
+                        while(row != sec){
+                            row += rDiff;
+                            notation = alph[row] + col;
+                            Square check = null;
+                            for(Square square : board){
+                                if(square.getSquare().equals(notation)) check= square;
+                            }
+                            if(check.equals(board.get(second))){
+                                if(check.getPiece() != null) return true;
+                            }
+                            //cant go though pieces
+                            if(check.getPiece() != null) return false;
+                        }
+                    }
+                }else if(diag){
+                    //bishop cannot move through pieces
+                    int col = firstCol;
+                    int row = fr;
+                    String notation1 = "";
+                    int cStep = 0;
+                    int rStep = 0;
+                    if(firstCol < secondCol)cStep = 1;
+                        else cStep = -1;
+                        if(fr < secondRow) rStep=1;
+                        else rStep = -1;
+                    while(col != secondCol || row != secondRow){
+                        row+=rStep;
+                        col+=cStep;
+                        notation1 = alph[row] + col;
+                        Square check1 = null;
+                        for(Square square : board){
+                            if(square.getSquare().equals(notation1))check1 = square;
+                        }
+                        //making sure you can capture
+                        if(check1.equals(board.get(second))){
+                            if(check1.getPiece() != null) return true;
+                        }
+                        //cant go though pieces
+                        if(check1.getPiece() != null) return false;
+                    }
+                }else return false;
             }
             return true;
         }
