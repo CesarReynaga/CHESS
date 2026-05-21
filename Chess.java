@@ -466,6 +466,41 @@ public class Chess extends JPanel{
                         if(check1.getPiece() != null) return false;
                     }
                 }else return false;
+            }else if(piece.equals("king")){
+                int firstRow = indexOf(alph, board.get(first).getSquare().charAt(0) + "");
+                System.out.println(firstRow + "nigger");
+                int firstCol = Integer.parseInt(board.get(first).getSquare().charAt(1) + "");
+                int secondRow = indexOf(alph, board.get(second).getSquare().charAt(0) + "");
+                int secondCol = Integer.parseInt(board.get(second).getSquare().charAt(1) + "");
+                boolean onBottom = firstRow == 0;
+                boolean onTop = firstRow == 7;
+                boolean onLeft = firstCol == 1;
+                boolean onRight = firstCol == 8;
+                //move up/down
+                if(secondCol == firstCol){
+                    if(!onTop && secondRow == firstRow + 1) return true;
+                    else if(!onBottom && secondRow == firstRow -1) return true;
+                    else return false;
+                }
+                //move left/right
+                else if(secondRow == firstRow){
+                    if(!onRight && secondCol == firstCol + 1) return true;
+                    else if (!onLeft && secondCol == firstCol - 1) return true;
+                    else return false;
+                }
+                //move diag right up/down
+                else if(!onRight && secondCol == firstCol + 1){
+                    if(!onTop && secondRow == firstRow + 1) return true;
+                    else if(!onBottom && secondRow == firstRow - 1) return true;
+                    return false;
+                }
+                //move diag left up/down
+                else if(!onLeft && secondCol == firstCol - 1){
+                    if(!onTop && secondRow == firstRow + 1) return true;
+                    else if(!onBottom && secondRow == firstRow - 1) return true;
+                    return false;
+                }
+                else return false;
             }
             return true;
         }
