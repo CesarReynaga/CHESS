@@ -242,8 +242,9 @@ public class Chess extends JPanel{
                 //bottom right  +9
                 //bottom left -7
                 //pawn only moves diagonally if its capturing / en passant
-                if(color.equals("black") && history.size() > 0){
-                    Move lastMove = history.get(history.size() - 1);
+                enPassant = false;
+                if(color.equals("black") && pastIndex > 0){
+                    Move lastMove = history.get(pastIndex - 1);
                     int lastStart = 63 - lastMove.getStart();
                     lastEnd = 63 - lastMove.getEnd();
                     String lastPiece = lastMove.getPiece().getType();
