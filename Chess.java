@@ -281,10 +281,30 @@ public class Chess extends JPanel{
                 //low right +15
                 //high left -10
                 //low left -17
-                if(second == first + 6 ) return true;
-                else if(second == first + 15 ) return true;
-                else if(second == first + -10 ) return true;
-                else if(second == first + -17) return true;
+                int firstCol = indexOf(alph, board.get(first).getSquare().charAt(0) + "");
+                int firstRow = Integer.parseInt(board.get(first).getSquare().charAt(1)+"");
+                int secCol = indexOf(alph, board.get(second).getSquare().charAt(0) + "");
+                int secRow = Integer.parseInt(board.get(second).getSquare().charAt(1)+"");
+                boolean onTop = firstRow == 8;
+                boolean onBottom = firstRow == 1;
+                boolean onRight = firstCol == 7;
+                boolean onLeft = firstCol == 0;
+                //high up right
+                if(firstRow < 7 && secRow == firstRow + 2 && !onRight && secCol == firstCol + 1) return true;
+                //low up right
+                else if(!onTop && secRow == firstRow + 1 && firstCol < 6 && secCol == firstCol + 2)return true;
+                //high up left
+                else if(firstRow < 7 && secRow == firstRow + 2 && !onLeft && secCol == firstCol - 1) return true;
+                //low up left
+                else if(!onTop && secRow == firstRow + 1 && firstCol > 1 && secCol == firstCol - 2) return true;
+                //far down right
+                else if(firstRow > 2 && secRow == firstRow - 2 && !onRight && secCol == firstCol + 1) return true;
+                //close down right
+                else if(!onBottom && secRow == firstRow - 1 && firstCol < 6 && secCol == firstCol + 2) return true;
+                //far down left
+                else if(firstRow > 2 && secRow == firstRow - 2 && !onLeft && secCol == firstCol - 1) return true;
+                //close down left
+                else if(!onBottom && secRow == firstRow - 1 && firstCol > 1 && secCol == firstCol - 2) return true;
                 else return false;
             }else if(piece.equals("bishop")){
                 //bishop only moves diagonally
