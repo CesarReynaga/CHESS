@@ -42,6 +42,12 @@ public class Chess extends JPanel{
     List<Move> history = new ArrayList<Move>();
     static boolean enPassant = false;
     boolean cPressed = false;
+    String engineMove = "";
+    String firstEngine = "";
+    String secEngine = "";
+    boolean engineTime = false;
+    boolean fPressed = false;
+    Stockfish sf = new Stockfish("C:\\Users\\reyna\\Documents\\CZARS CODE\\Stockfish\\stockfish-windows-x86-64-avx2.exe");
     public Chess() {
         try{
             wp = ImageIO.read(new File("wPawn.png"));
@@ -68,11 +74,13 @@ public class Chess extends JPanel{
                 else if(e.getKeyCode() == KeyEvent.VK_RIGHT) rightPressed = true;
                 else if(e.getKeyCode() == KeyEvent.VK_C) cPressed = true;
                 else if(e.getKeyCode() == KeyEvent.VK_UP) upPressed = true;
+                else if(e.getKeyCode() == KeyEvent.VK_F) fPressed = true;
                 else{
                     rightPressed = false;
                     leftPressed = false;
                     cPressed = false;
                     upPressed = false;
+                    fPressed = false;
                 }
                 keyPressed = true;
             }
@@ -82,6 +90,7 @@ public class Chess extends JPanel{
                 cPressed = false;
                 upPressed = false;
                 rightPressed = false;
+                fPressed = false;
                 keyPressed = false;
             }
         });
@@ -127,11 +136,15 @@ public class Chess extends JPanel{
                             else if(!captured && isFlipped && !cPressed && !enPassant)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece()));
                             else if(captured && isFlipped && !cPressed && !enPassant)history.add(new Move(63 - first, 63 - second, board.get(second).getPiece(), capturedPiece));
                             else if(captured && isFlipped && !cPressed && enPassant)history.add(new Move(first, second, board.get(second).getPiece(), capturedPiece, "enPassant"));
-
+                            if(!cPressed) engineMove = sf.getWorstMove(board.get(first).getSquare(), board.get(second).getSquare());
+                            System.out.println(engineMove + " enging");
+                            firstEngine = engineMove.substring(0,2);
+                            secEngine = engineMove.substring(2,4);
+                            System.out.println(firstEngine  + "f" + "\n" + secEngine + "s");
+                            engineTime = true;
                             second = -1;
                             first = -1;
                             if(!cPressed)pastIndex++;
-                            if(!cPressed)flipBoard();
                         }else if(second != -1){ second = -1; first = -1;}
                     }
                     i++;
@@ -143,6 +156,34 @@ public class Chess extends JPanel{
         labelBoard();
         initPieces();
         Timer timer = new Timer(16, e -> {
+            if(fPressed){
+                fPressed = false;
+                flipBoard();
+                if(pastIndex == 0){
+                if(!cPressed) engineMove = sf.getWorstMove();
+                    System.out.println(engineMove + " enging");
+                    firstEngine = engineMove.substring(0,2);
+                    secEngine = engineMove.substring(2,4);
+                    System.out.println(firstEngine  + "f" + "\n" + secEngine + "s");
+                    engineTime = true;
+                }
+            }
+            if(engineTime){
+                int count = 0;
+                int first = 0;
+                int second = 0;
+                for(Square square : board){
+                    if(square.getSquare().equals(firstEngine)) first = count;
+                    if(square.getSquare().equals(secEngine)) second = count;
+                    count++;
+                }
+                System.out.println(first + "f" + "\n" + second + "s");
+                //isLegal(first, second, pastIndex, board, history, isFlipped);
+                board.get(second).setPiece(board.get(first).getPiece());
+                board.get(first).removePiece();
+                //if(enPassant) board.get(lastEnd).removePiece();
+                engineTime = false;
+            }
             if(keyPressed && !cPressed) first = -1;
             if(upPressed && history.size() > 0){
                 upPressed = false;
@@ -234,7 +275,7 @@ public class Chess extends JPanel{
         if(board.get(second).getPiece() != null){
             if(board.get(second).getPiece().getColor().equals(color)) return false;
         }
-        if((color.equals("white") && pastIndex % 2 == 0) || (color.equals("black") && pastIndex % 2 == 1)){
+        if(/*(color.equals("white") && pastIndex % 2 == 0) || (color.equals("black") && pastIndex % 2 == 1)*/ true){
             if(piece.equals("pawn")){
                 //pawn cant move backwards
                 //top right  +7
