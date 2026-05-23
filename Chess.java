@@ -1,168 +1,226 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.awt.Font;
-import java.io.IOException;
-import java.util.Scanner;
-import java.io.File;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.awt.Point.*;
-import java.awt.event.*;
-public class Chess extends JPanel{
-    boolean keyPressed = false;
-    BufferedImage wp;
-    BufferedImage wr;
-    BufferedImage wn;
-    BufferedImage wb;
-    BufferedImage wq;
-    BufferedImage wk;
-    BufferedImage bp;
-    BufferedImage br;
-    BufferedImage bn;
-    BufferedImage bb;
-    BufferedImage bq;
-    BufferedImage bk;
-    ArrayList<Square> board = new ArrayList<Square>();
+
+public class Chess extends JPanel implements Runnable {
+
+    private BufferedImage img;
+    BufferedImage bRook;
+    BufferedImage bKnight;
+    BufferedImage bBishop;
+    BufferedImage bQueen;
+    BufferedImage bKing;
+    BufferedImage bPawn;
+
+    BufferedImage wRook;
+    BufferedImage wKnight;
+    BufferedImage wBishop;
+    BufferedImage wQueen;
+    BufferedImage wKing;
+    BufferedImage wPawn;
+
+    int mouseX;
+    int mouseY;
+
+    int col = mouseX/ 100;
+    int row = mouseY/100;
+
+    int selectedRow = -1;
+    int selectedCol = -1;
+    boolean hasSelection = false;
+
+
+    String[][] board = new String[8][8];
+
+
+    Thread gameThread;
+
+    MouseHandler mouse;
+
     public Chess() {
-        try{
-            wp = ImageIO.read(new File("wPawn.png"));
-            wr = ImageIO.read(new File("wRook.png"));
-            wn = ImageIO.read(new File("wKnight.png"));
-            wb = ImageIO.read(new File("wBishop.png"));
-            wq = ImageIO.read(new File("wQueen.png"));
-            wk = ImageIO.read(new File("wKing.png"));
-            bp = ImageIO.read(new File("bPawn.png"));
-            br = ImageIO.read(new File("bRook.png"));
-            bn = ImageIO.read(new File("bKnight.png"));
-            bb = ImageIO.read(new File("bBishop.png"));
-            bq = ImageIO.read(new File("bQueen.png"));
-            bk = ImageIO.read(new File("bKing.png"));
-        }catch (IOException e){
-            System.out.println(e.getMessage());
+
+
+
+        board[0][0] = "/bRook.png";
+        board[0][1] = "/bKnight.png";
+        board[0][2] = "/bBishop.png";
+        board[0][3] = "/bQueen.png";
+        board[0][4] = "/bKing.png";
+        board[0][5] = "/bBishop.png";
+        board[0][6] = "/bKnight.png";
+        board[0][7] = "/bRook.png";
+        for (int i = 0; i < 8; i++) {
+            board[1][i] = "bp";
         }
-        setFocusable(true);
-        addKeyListener(new KeyAdapter() 
-        {
-            public void keyPressed(KeyEvent e) {
-                keyPressed = true;
-            }
-            
-            public void keyReleased(KeyEvent e) {
-                keyPressed = false;
-            }
-        });
-        
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                int i = 0;
-                for(Square square : board){
-                    if(square.click(e.getX(), e.getY())) System.out.println("Clicked on square: " + i);
-                    i++;
-                }
-            }
-        });
-        
-        makeBoard();
-        Timer timer = new Timer(16, e -> {
-            repaint();
-        });
-        
-        timer.start();
+        board[7][0] = "/wRook.png";
+        board[7][1] = "/wKnight.png";
+        board[7][2] = "/wBishop.png";
+        board[7][3] = "/wQueen.png";
+        board[7][4] = "/wKing.png";
+        board[7][5] = "/wBishop.png";
+        board[7][6] = "/wKnight.png";
+        board[7][7] = "/wRook.png";
+        for (int i = 0; i < 8; i++) {
+            board[6][i] = "wp";
+        }
+        try{
+            bRook = ImageIO.read(getClass().getResource("/bRook.png"));
+            bKnight = ImageIO.read(getClass().getResource("/bKnight.png"));
+            bBishop = ImageIO.read(getClass().getResource("/bBishop.png"));
+            bQueen = ImageIO.read(getClass().getResource("/bQueen.png"));
+            bKing = ImageIO.read(getClass().getResource("/bKing.png"));
+            bPawn = ImageIO.read(getClass().getResource("/bPawn.png"));
+            // WHITE PIECES
+            wRook = ImageIO.read(getClass().getResource("/wRook.png"));
+            wKnight = ImageIO.read(getClass().getResource("/wKnight.png"));
+            wBishop = ImageIO.read(getClass().getResource("/wBishop.png"));
+            wQueen = ImageIO.read(getClass().getResource("/wQueen.png"));
+            wKing = ImageIO.read(getClass().getResource("/wKing.png"));
+            wPawn = ImageIO.read(getClass().getResource("/wPawn.png"));
+
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        mouse = new MouseHandler();
+
+        this.addMouseListener(mouse);
+        this.addMouseMotionListener(mouse);
+
+        this.setPreferredSize(new Dimension(800, 800));
+        this.setBackground(Color.WHITE);
+        this.setDoubleBuffered(true);
+        this.setFocusable(true);
+
+    }
+
+    public void startGameThread() {
+        gameThread = new Thread(this);
+        gameThread.start();
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        
+    public void run() {
+
+        while (gameThread != null) {
+
+            update();
+            repaint();
+
+            try {
+                Thread.sleep(16);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void update() {
+
+        if (mouse.mousePressed) {
+            int tileSize = 100;
+
+            col = mouse.mouseX/tileSize;
+            row = mouse.mouseY/tileSize;
+
+            System.out.println("Mouse X: " + col + "\nMouse Y: " +row);
+
+
+
+
+
+            mouse.mousePressed = false;
+        }
+
+
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        drawBoard(g);
+
+        Graphics2D g2 = (Graphics2D) g;
+        drawBoard(g2);
+
+
+        g2.dispose();
     }
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("MOVING SHIT");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 800);
-        frame.add(new Chess());
- 
-        frame.setVisible(true);
-    }
-    
-    public void drawBoard(Graphics g){
-        boolean toggle = false;
-        int count = 0;
-        for(Square square : board){
-            if(!toggle) g.setColor(new Color(173, 216, 230));
-            else g.setColor(new Color(120, 140, 160));
-            count++;
-            if(count != 8)toggle = !toggle;
-            else count = 0;
-            g.fillRect(square.getX(), square.getY(), 50, 50);
-            g.setColor(Color.BLACK);
-            g.drawRect(square.getX(), square.getY(), 50, 50);
-        }
-    }
-    
-    public void makeBoard(){
-        int blockWidth = 50;
-        int blockHeight = 50;
-        int gridWidth = 8 * blockWidth;
-        int gridHeight = 8 * blockHeight;
-        int startX = ((800 - gridWidth) / 2);
-        int startY = ((800 - gridHeight) / 2);
-        for(int i = 0; i < 8; i++){
-            for(int j = 0; j < 8; j++){
-                board.add(new Square((i * 50) + startX, (j * 50) + startY));
+    public void drawBoard(Graphics2D g2) {
+        int tileSize = 100;
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                if ((row + col) % 2 == 0) {
+                    g2.setColor(new Color(118, 150, 86));  // dark
+                } else {
+                    g2.setColor(new Color(238, 238, 210)); // light
+                }
+                if(hasSelection){
+                    g2.setColor(Color.yellow);
+                }
+                g2.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+
+
+                if (board[row][col] != null && board[row][col].equals("/bRook.png")) {
+                    g2.drawImage(bRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/bKnight.png")) {
+                    g2.drawImage(bKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/bBishop.png")) {
+                    g2.drawImage(bBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/bQueen.png")) {
+                    g2.drawImage(bQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/bKing.png")) {
+                    g2.drawImage(bKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/bPawn.png")) {
+                    g2.drawImage(bPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+                // WHITE
+                if (board[row][col] != null && board[row][col].equals("/wRook.png")) {
+                    g2.drawImage(wRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/wKnight.png")) {
+                    g2.drawImage(wKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/wBishop.png")) {
+                    g2.drawImage(wBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/wQueen.png")) {
+                    g2.drawImage(wQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/wKing.png")) {
+                    g2.drawImage(wKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+                if (board[row][col] != null && board[row][col].equals("/wPawn.png")) {
+                    g2.drawImage(wPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+
+
             }
+
         }
 
+
+
     }
-    
-    public static void writeHighScore(int high) {
-        int old = 0;
-        try
-        {
-            File file = new File("output.txt");
-            Scanner scanner = new Scanner(file);
-            scanner.next();
-            scanner.next();
-            if(scanner.hasNextInt()) old = scanner.nextInt();
-        }
-        catch(IOException e)
-        {
-            System.err.println("Error writing to file: " + e.getMessage());
-        }
-        if(high > old)
-        {
-            String fileName = "output.txt";
-            String content = ("HIGHEST WPM: " + high + " wpm");
-    
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
-                writer.write(content);
-            } catch (IOException e) {
-                System.err.println("Error writing to file: " + e.getMessage());
-            }
-        }
-    }
-    
-    public static int getHighScore()
-    {
-        try
-        {
-            File file = new File("output.txt");
-            Scanner scanner = new Scanner(file);
-            scanner.next();
-            scanner.next();
-            if(scanner.hasNextInt()) return scanner.nextInt();
-        }
-        catch(IOException e)
-        {
-            System.err.println("Error writing to file: " + e.getMessage());
-        }
-        return -1;
+    public void drawPieces(Graphics2D g2){
+
     }
 }
+
