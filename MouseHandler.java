@@ -6,7 +6,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener {
 
     public int mouseX, mouseY;
 
-    public boolean mousePressed;
+    public boolean mousePressed = false;
 
     @Override
     public void mousePressed(MouseEvent e) {
@@ -24,9 +24,7 @@ public class MouseHandler implements MouseListener, MouseMotionListener {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        mousePressed = !mousePressed;
-        mouseX = e.getX();
-        mouseY = e.getY();
+
     }
 
     @Override
