@@ -2,6 +2,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Objects;
 
 public class Chess extends JPanel implements Runnable {
 
@@ -33,17 +34,19 @@ public class Chess extends JPanel implements Runnable {
     int selectedCol = -1;
     boolean hasSelection = false;
     boolean rightPressed = false;
-    boolean leftPressed = false;
 
-    boolean validMove = false;
     boolean whiteTurn = true;
     boolean flipped = false;
+    boolean visibility = false;
+
 
 
 
     Piece[][] Piece = new Piece[8][8];
     String[][] squares = new String[8][8];
     boolean[][] firstMove = new boolean[8][8];
+
+    boolean[][] isValidMove = new boolean[8][8];
 
 
     Thread gameThread;
@@ -95,19 +98,19 @@ public class Chess extends JPanel implements Runnable {
             Piece[6][i] = new Piece("Pawn", true);
         }
         try{
-            bRook = ImageIO.read(getClass().getResource("/blackRook.png"));
-            bKnight = ImageIO.read(getClass().getResource("/blackKnight.png"));
-            bBishop = ImageIO.read(getClass().getResource("/blackBishop.png"));
-            bQueen = ImageIO.read(getClass().getResource("/blackQueen.png"));
-            bKing = ImageIO.read(getClass().getResource("/blackKing.png"));
-            bPawn = ImageIO.read(getClass().getResource("/blackPawn.png"));
+            bRook = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackRook.png")));
+            bKnight = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackKnight.png")));
+            bBishop = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackBishop.png")));
+            bQueen = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackQueen.png")));
+            bKing = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackKing.png")));
+            bPawn = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackPawn.png")));
             // WHITE PIECES
-            wRook = ImageIO.read(getClass().getResource("/whiteRook.png"));
-            wKnight = ImageIO.read(getClass().getResource("/whiteKnight.png"));
-            wBishop = ImageIO.read(getClass().getResource("/whiteBishop.png"));
-            wQueen = ImageIO.read(getClass().getResource("/whiteQueen.png"));
-            wKing = ImageIO.read(getClass().getResource("/whiteKing.png"));
-            wPawn = ImageIO.read(getClass().getResource("/whitePawn.png"));
+            wRook = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whiteRook.png")));
+            wKnight = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whiteKnight.png")));
+            wBishop = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whiteBishop.png")));
+            wQueen = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whiteQueen.png")));
+            wKing = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whiteKing.png")));
+            wPawn = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whitePawn.png")));
 
 
         } catch (Exception e){
@@ -150,11 +153,14 @@ public class Chess extends JPanel implements Runnable {
     }
 
     public void update() {
-        if(keyH.rPressed){
+        boolean captured;
+
+        if (keyH.rPressed) {
             flipped = !flipped;
             keyH.rPressed = false;
             System.out.println("Flipped");
         }
+
         if (!mouse.mousePressed) return;
 
         col = mouse.mouseX / tileSize;
@@ -164,177 +170,240 @@ public class Chess extends JPanel implements Runnable {
             mouse.mousePressed = false;
             return;
         }
+        if(!hasSelection){
+            if(Piece[row][col] == null){
+                System.out.println(squares[row][col]);
+
+            }
+        }
+
 
         if (!hasSelection) {
 
-            if (Piece[row][col] != null &&
-                    Piece[row][col].isWhite == whiteTurn) {
+            if (Piece[row][col] != null && Piece[row][col].isWhite == whiteTurn) {
 
                 selectedRow = row;
                 selectedCol = col;
                 hasSelection = true;
+                visibility = true;
+                initLegalMoves(Piece[row][col], row, col);
 
                 System.out.println("Selected: " + Piece[row][col].type);
             }
+        }
 
-        } else {
+
+
+        /// MOOOVING PIECES
+
+        else {
 
             Piece piece = Piece[selectedRow][selectedCol];
 
             if (piece == null) {
                 hasSelection = false;
                 mouse.mousePressed = false;
+
                 return;
-            }
-
-            validMove = false;
-
-            if (Piece[row][col] != null && Piece[row][col].isWhite == piece.isWhite) {
-                System.out.println("Invalid: own piece");
-                hasSelection = false;
-                mouse.mousePressed = false;
-                return;
-            }
-
-            // BLACK PAWN
-            if (piece.type.equals("Pawn") && !piece.isWhite) {
-
-                if (col == selectedCol && row == selectedRow + 1 && Piece[row][col] == null) {
-                    validMove = true;
-                }
-
-                else if (firstMove[selectedRow][selectedCol]) {
-                    if (col == selectedCol && row == selectedRow + 2 && Piece[selectedRow + 1][col] == null && Piece[row][col] == null) {
-                        validMove = true;
-                    }
-                }
-
-                else if ((col == selectedCol - 1 || col == selectedCol + 1) &&
-                        row == selectedRow + 1 && Piece[row][col] != null && Piece[row][col].isWhite) {
-                    validMove = true;
-                }
-            }
-
-            // WHITE PAWN
-            if (piece.type.equals("Pawn") && piece.isWhite) {
-
-                if (col == selectedCol && row == selectedRow - 1 && Piece[row][col] == null) {
-                    validMove = true;
-                }
-
-                else if (firstMove[selectedRow][selectedCol]) {
-                    if (col == selectedCol && row == selectedRow - 2 && Piece[selectedRow - 1][col] == null && Piece[row][col] == null) {
-                        validMove = true;
-                    }
-                }
-
-                else if ((col == selectedCol - 1 || col == selectedCol + 1) &&
-                        row == selectedRow - 1 && Piece[row][col] != null && !Piece[row][col].isWhite) {
-                    validMove = true;
-                }
             }
 
             if (row == selectedRow && col == selectedCol) {
                 hasSelection = false;
+                visibility = false;
                 mouse.mousePressed = false;
                 return;
             }
 
-            if (validMove || !piece.type.equals("Pawn")) {
+            if (isValidMove[row][col]) {
 
                 Piece[row][col] = piece;
                 Piece[selectedRow][selectedCol] = null;
 
-                System.out.println("Moved Piece");
+                if (piece.type.equals("Pawn")) {
+                    firstMove[selectedRow][selectedCol] = false;
+                }
 
                 whiteTurn = !whiteTurn;
-            }
 
-            else {
+                System.out.println("Moved Piece");
+            } else {
                 System.out.println("Illegal Move");
             }
 
-            if (piece.type.equals("Pawn")) {
-                firstMove[selectedRow][selectedCol] = false;
-            }
-
             hasSelection = false;
+            selectedRow = -1;
+            selectedCol = -1;
+            visibility = false;
         }
+
 
         mouse.mousePressed = false;
     }
+    public void initLegalMoves(Piece piece, int row, int col) {
 
 
-
-
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        Graphics2D g2 = (Graphics2D) g;
-        if(flipped == true){
-            g2.rotate(Math.toRadians(180), getWidth() / 2.0, getHeight() / 2.0);
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                isValidMove[i][j] = false;
+            }
         }
-        drawPiece(g2);
 
+        ///
+        // BLACKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK
+        ///
+        if(piece.type.equals("Pawn") && !piece.isWhite){
 
+            // down 1
+            if(row + 1 < 8 && Piece[row + 1][col] == null){
+                isValidMove[row + 1][col] = true;
+                System.out.println("move up 1");
+            }
 
-        g2.dispose();
-    }
+            // UP 2 if FIRST MOVE
+            if (firstMove[row][col] && row + 2 < 8 &&
+                    Piece[row + 1][col] == null &&
+                    Piece[row + 2][col] == null) {
 
-    public void drawPiece(Graphics2D g2) {
-        int tileSize = 100;
+                isValidMove[row + 2][col] = true;
+            }
+            // TAKE LEFT
 
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
+            if(row + 1 < 8 && col - 1 >= 0 &&
+                    Piece[row + 1][col - 1] != null &&
+                    Piece[row + 1][col - 1].isWhite){
 
-                // board colors
-                if ((row + col) % 2 == 0) {
-                    g2.setColor(new Color(118, 150, 86));
-                } else {
-                    g2.setColor(new Color(238, 238, 210));
-                }
+                isValidMove[row + 1][col - 1] = true;
+            }
+            // TAKE RIGHT
 
-                if (hasSelection && row == selectedRow && col == selectedCol) {
-                    g2.setColor(Color.yellow);
-                }
+            if(row + 1 < 8 && col + 1 < 8 &&
+                    Piece[row + 1][col + 1] != null &&
+                    Piece[row + 1][col + 1].isWhite) {
 
-                if (rightPressed) {
-                    g2.setColor(Color.yellow);
-                }
+                isValidMove[row + 1][col + 1] = true;
+            }
+        }
 
-                g2.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+        ///
+        // WHITEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+        ///
+        if (piece.type.equals("Pawn") && piece.isWhite) {
 
-                Piece p = Piece[row][col];
-                if (p == null) continue;
+            // up 1
+            if (row - 1 >= 0 && Piece[row - 1][col] == null) {
+                isValidMove[row - 1][col] = true;
+            }
+            // CAPTURED LIGHT
 
-                if (p.type.equals("Rook") && !p.isWhite)
-                    g2.drawImage(bRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Knight") && !p.isWhite)
-                    g2.drawImage(bKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Bishop") && !p.isWhite)
-                    g2.drawImage(bBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Queen") && !p.isWhite)
-                    g2.drawImage(bQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("King") && !p.isWhite)
-                    g2.drawImage(bKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Pawn") && !p.isWhite)
-                    g2.drawImage(bPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+            if (row - 1 >= 0 && col - 1 >= 0 &&
+                    Piece[row - 1][col - 1] != null &&
+                    !Piece[row - 1][col - 1].isWhite) {
 
-                if (p.type.equals("Rook") && p.isWhite)
-                    g2.drawImage(wRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Knight") && p.isWhite)
-                    g2.drawImage(wKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Bishop") && p.isWhite)
-                    g2.drawImage(wBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Queen") && p.isWhite)
-                    g2.drawImage(wQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("King") && p.isWhite)
-                    g2.drawImage(wKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
-                if (p.type.equals("Pawn") && p.isWhite)
-                    g2.drawImage(wPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                isValidMove[row - 1][col - 1] = true;
+            }
+            // CAPTURED RIGHT
+
+            if (row - 1 >= 0 && col + 1 < 8 &&
+                    Piece[row - 1][col + 1] != null &&
+                    !Piece[row - 1][col + 1].isWhite) {
+
+                isValidMove[row - 1][col + 1] = true;
+            }
+            // UP 2 if FIRST MOVE
+
+            if (firstMove[row][col] && row - 2 >= 0 &&
+                    Piece[row - 1][col] == null &&
+                    Piece[row - 2][col] == null) {
+
+                isValidMove[row - 2][col] = true;
             }
         }
     }
 
-}
+
+        @Override
+        public void paintComponent (Graphics g){
+            super.paintComponent(g);
+
+            Graphics2D g2 = (Graphics2D) g;
+            if (flipped) {
+                g2.rotate(Math.toRadians(180), getWidth() / 2.0, getHeight() / 2.0);
+            }
+            drawPiece(g2);
+            drawValidMoves(g2);
+
+
+            g2.dispose();
+        }
+        public void drawValidMoves(Graphics2D g2){
+        g2.setColor(Color.white);
+        if(visibility)
+        for(int row = 0; row <8; row++){
+            for(int col = 0; col <8; col++){
+                if(isValidMove[row][col]){
+                    int validMoveX = (col * tileSize) + (tileSize-67);
+                    int validMoveY = (row*tileSize)+ (tileSize -67);
+                    g2.fillOval(validMoveX, validMoveY, 35,35);
+                }
+            }
+        }
+
+
+        }
+
+        public void drawPiece (Graphics2D g2){
+            int tileSize = 100;
+
+            for (int row = 0; row < 8; row++) {
+                for (int col = 0; col < 8; col++) {
+
+                    // board colors
+                    if ((row + col) % 2 == 0) {
+                        g2.setColor(new Color(118, 150, 86));
+                    } else {
+                        g2.setColor(new Color(238, 238, 210));
+                    }
+
+                    if (hasSelection && row == selectedRow && col == selectedCol) {
+                        g2.setColor(Color.yellow);
+                    }
+
+                    if (rightPressed) {
+                        g2.setColor(Color.yellow);
+                    }
+
+                    g2.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
+
+                    Piece p = Piece[row][col];
+                    if (p == null) continue;
+
+                    if (p.type.equals("Rook") && !p.isWhite)
+                        g2.drawImage(bRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Knight") && !p.isWhite)
+                        g2.drawImage(bKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Bishop") && !p.isWhite)
+                        g2.drawImage(bBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Queen") && !p.isWhite)
+                        g2.drawImage(bQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("King") && !p.isWhite)
+                        g2.drawImage(bKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Pawn") && !p.isWhite)
+                        g2.drawImage(bPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+
+                    if (p.type.equals("Rook") && p.isWhite)
+                        g2.drawImage(wRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Knight") && p.isWhite)
+                        g2.drawImage(wKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Bishop") && p.isWhite)
+                        g2.drawImage(wBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Queen") && p.isWhite)
+                        g2.drawImage(wQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("King") && p.isWhite)
+                        g2.drawImage(wKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    if (p.type.equals("Pawn") && p.isWhite)
+                        g2.drawImage(wPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                }
+            }
+        }
+
+    }
