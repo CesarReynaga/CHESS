@@ -23,7 +23,8 @@ public class Chess extends JPanel implements Runnable {
     BufferedImage wKing;
     BufferedImage wPawn;
 
-
+    int screenWidth = 950;
+    int screenHeight = 800;
     int mouseX;
     int mouseY;
     int tileSize = 100;
@@ -33,27 +34,15 @@ public class Chess extends JPanel implements Runnable {
     int row = mouseY / tileSize;
 
 
-
-
-
-
-
-
     int selectedRow = -1;
     int selectedCol = -1;
     boolean hasSelection = false;
-    boolean rightPressed = false;
+    boolean clicked = false;
 
 
     boolean whiteTurn = true;
     boolean flipped = false;
     boolean visibility = false;
-
-
-
-
-
-
 
 
     Piece[][] Piece = new Piece[8][8];
@@ -62,8 +51,6 @@ public class Chess extends JPanel implements Runnable {
 
 
     boolean[][] isValidMove = new boolean[8][8];
-
-
 
 
     Thread gameThread;
@@ -76,15 +63,13 @@ public class Chess extends JPanel implements Runnable {
     public Chess() {
 
 
-
-
         for (int row = 0; row < 8; row++) {
 
 
             for (int col = 0; col < 8; col++) {
 
 
-                char file = (char)('a' + col);
+                char file = (char) ('a' + col);
                 int rank = 8 - row;
 
 
@@ -95,8 +80,6 @@ public class Chess extends JPanel implements Runnable {
             firstMove[1][i] = true; // black pawns
             firstMove[6][i] = true; // white pawns
         }
-
-
 
 
         Piece[0][0] = new Piece("Rook", false);
@@ -125,7 +108,7 @@ public class Chess extends JPanel implements Runnable {
         for (int i = 0; i < 8; i++) {
             Piece[6][i] = new Piece("Pawn", true);
         }
-        try{
+        try {
             bRook = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackRook.png")));
             bKnight = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackKnight.png")));
             bBishop = ImageIO.read(Objects.requireNonNull(getClass().getResource("/blackBishop.png")));
@@ -141,9 +124,7 @@ public class Chess extends JPanel implements Runnable {
             wPawn = ImageIO.read(Objects.requireNonNull(getClass().getResource("/whitePawn.png")));
 
 
-
-
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -156,9 +137,7 @@ public class Chess extends JPanel implements Runnable {
         this.addKeyListener(keyH);
 
 
-
-
-        this.setPreferredSize(new Dimension(800, 800));
+        this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.WHITE);
         this.setDoubleBuffered(true);
         this.setFocusable(true);
@@ -210,20 +189,23 @@ public class Chess extends JPanel implements Runnable {
         col = mouse.mouseX / tileSize;
         row = mouse.mouseY / tileSize;
 
+        if (flipped) {
+            col = 7 - col;
+            row = 7 - row;
+        }
+
 
         if (row < 0 || row > 7 || col < 0 || col > 7) {
             mouse.mousePressed = false;
             return;
         }
-        if(!hasSelection){
-            if(Piece[row][col] == null){
+        if (!hasSelection) {
+            if (Piece[row][col] == null) {
                 System.out.println(squares[row][col]);
 
 
             }
         }
-
-
 
 
         if (!hasSelection) {
@@ -242,10 +224,6 @@ public class Chess extends JPanel implements Runnable {
                 System.out.println("Selected: " + Piece[row][col].type);
             }
         }
-
-
-
-
 
 
         /// MOOOVING PIECES
@@ -302,13 +280,10 @@ public class Chess extends JPanel implements Runnable {
         }
 
 
-
-
         mouse.mousePressed = false;
     }
+
     public void initLegalMoves(Piece piece, int row, int col) {
-
-
 
 
         for (int i = 0; i < 8; i++) {
@@ -365,197 +340,180 @@ public class Chess extends JPanel implements Runnable {
         ///
 
         // DOWN
-        if (piece.type.equals("Rook") ) {
-            for(int r = row+1; r<8; r++){
-                if(Piece[r][col] == null){
-                    isValidMove[r][col] =true;
-                }
-                else{
-                    if(Piece[r][col].isWhite != piece.isWhite ){
-                        isValidMove[r][col] = true;
-                    }
-                    break;
-                }
-            }
-        // UPPP
-            for(int r = row-1; r >= 0; r--){
-                if(Piece[r][col] == null){
+        if (piece.type.equals("Rook")) {
+            for (int r = row + 1; r < 8; r++) {
+                if (Piece[r][col] == null) {
                     isValidMove[r][col] = true;
-                }
-                else {
-                    if(Piece[r][col].isWhite != piece.isWhite){
-                        isValidMove[r][col] = true;
-                    }
-                    break;
-                }
-
-            }
-            for(int c = col -1; c>= 0; c--){
-                if(Piece[row][c] == null){
-                    isValidMove[row][c] = true;
-                }
-                else{
-                    if(Piece[row][c].isWhite != piece.isWhite){
-                        isValidMove[row][c] =  true;
-                    }
-                    break;
-                }
-            }
-        // RIGHT
-            for(int c = col+1; c  <8; c++){
-                if(Piece[row][c] == null){
-                    isValidMove[row][c] = true;
-                }
-                else{
-                    if(Piece[row][col].isWhite != piece.isWhite){
-                        isValidMove[row][c] = true;
-                    }
-                    break;
-                }
-            }
-
-
-
-        }
-        if(piece.type.equals("Bishop")){
-            for(int i = 1; row + i <8 && col+i <8; i++){
-                if(Piece[row+i][col+i] == null){
-                    isValidMove[row + i][col + i] = true;
-                }
-                else{
-                    if(Piece[row+i][col+i].isWhite != piece.isWhite){
-                        isValidMove[row + i][col +i] = true;
-                    }
-                    break;
-                }
-            }
-            for(int i = 1; row - i >= 0 && col+i <8; i++){
-                if(Piece[row-i][col+i] == null){
-                    isValidMove[row - i][col + i] = true;
-                }
-                else{
-                    if(Piece[row-i][col+i].isWhite != piece.isWhite){
-                        isValidMove[row - i][col +i] = true;
-                    }
-                    break;
-                }
-
-            }
-            for(int i = 1; row - i >= 0 && col-i >= 0; i++){
-                if(Piece[row-i][col-i] == null){
-                    isValidMove[row - i][col - i] = true;
-                }
-                else{
-                    if(Piece[row-i][col-i].isWhite != piece.isWhite){
-                        isValidMove[row - i][col - i] = true;
-                    }
-                    break;
-                }
-
-            }
-            for(int i = 1; row + i < 8 && col-i >= 0; i++){
-                if(Piece[row + i][col-i] == null){
-                    isValidMove[row + i][col - i] = true;
-                }
-                else{
-                    if(Piece[row + i][col-i].isWhite != piece.isWhite){
-                        isValidMove[row + i][col - i] = true;
-                    }
-                    break;
-                }
-
-            }
-
-        }
-        if(piece.type.equals("Queen")){
-            for(int r = row+1; r<8; r++){
-                if(Piece[r][col] == null){
-                    isValidMove[r][col] =true;
-                }
-                else{
-                    if(Piece[r][col].isWhite != piece.isWhite ){
+                } else {
+                    if (Piece[r][col].isWhite != piece.isWhite) {
                         isValidMove[r][col] = true;
                     }
                     break;
                 }
             }
             // UPPP
-            for(int r = row-1; r >= 0; r--){
-                if(Piece[r][col] == null){
+            for (int r = row - 1; r >= 0; r--) {
+                if (Piece[r][col] == null) {
                     isValidMove[r][col] = true;
-                }
-                else {
-                    if(Piece[r][col].isWhite != piece.isWhite){
+                } else {
+                    if (Piece[r][col].isWhite != piece.isWhite) {
                         isValidMove[r][col] = true;
                     }
                     break;
                 }
 
             }
-            for(int c = col -1; c>= 0; c--){
-                if(Piece[row][c] == null){
+            for (int c = col - 1; c >= 0; c--) {
+                if (Piece[row][c] == null) {
                     isValidMove[row][c] = true;
-                }
-                else{
-                    if(Piece[row][c].isWhite != piece.isWhite){
-                        isValidMove[row][c] =  true;
-                    }
-                    break;
-                }
-            }
-            // RIGHT
-            for(int c = col+1; c  <8; c++){
-                if(Piece[row][c] == null){
-                    isValidMove[row][c] = true;
-                }
-                else{
-                    if(Piece[row][col].isWhite != piece.isWhite){
+                } else {
+                    if (Piece[row][c].isWhite != piece.isWhite) {
                         isValidMove[row][c] = true;
                     }
                     break;
                 }
             }
-            for(int i = 1; row + i <8 && col+i <8; i++){
-                if(Piece[row+i][col+i] == null){
-                    isValidMove[row + i][col + i] = true;
-                }
-                else{
-                    if(Piece[row+i][col+i].isWhite != piece.isWhite){
-                        isValidMove[row + i][col +i] = true;
+            // RIGHT
+            for (int c = col + 1; c < 8; c++) {
+                if (Piece[row][c] == null) {
+                    isValidMove[row][c] = true;
+                } else {
+                    if (Piece[row][col].isWhite != piece.isWhite) {
+                        isValidMove[row][c] = true;
                     }
                     break;
                 }
             }
-            for(int i = 1; row - i >= 0 && col+i <8; i++){
-                if(Piece[row-i][col+i] == null){
-                    isValidMove[row - i][col + i] = true;
+
+
+        }
+        if (piece.type.equals("Bishop")) {
+            for (int i = 1; row + i < 8 && col + i < 8; i++) {
+                if (Piece[row + i][col + i] == null) {
+                    isValidMove[row + i][col + i] = true;
+                } else {
+                    if (Piece[row + i][col + i].isWhite != piece.isWhite) {
+                        isValidMove[row + i][col + i] = true;
+                    }
+                    break;
                 }
-                else{
-                    if(Piece[row-i][col+i].isWhite != piece.isWhite){
-                        isValidMove[row - i][col +i] = true;
+            }
+            for (int i = 1; row - i >= 0 && col + i < 8; i++) {
+                if (Piece[row - i][col + i] == null) {
+                    isValidMove[row - i][col + i] = true;
+                } else {
+                    if (Piece[row - i][col + i].isWhite != piece.isWhite) {
+                        isValidMove[row - i][col + i] = true;
                     }
                     break;
                 }
 
             }
-            for(int i = 1; row - i >= 0 && col-i >= 0; i++){
-                if(Piece[row-i][col-i] == null){
+            for (int i = 1; row - i >= 0 && col - i >= 0; i++) {
+                if (Piece[row - i][col - i] == null) {
                     isValidMove[row - i][col - i] = true;
-                }
-                else{
-                    if(Piece[row-i][col-i].isWhite != piece.isWhite){
+                } else {
+                    if (Piece[row - i][col - i].isWhite != piece.isWhite) {
                         isValidMove[row - i][col - i] = true;
                     }
                     break;
                 }
 
             }
-            for(int i = 1; row + i < 8 && col-i >= 0; i++){
-                if(Piece[row + i][col-i] == null){
+            for (int i = 1; row + i < 8 && col - i >= 0; i++) {
+                if (Piece[row + i][col - i] == null) {
                     isValidMove[row + i][col - i] = true;
+                } else {
+                    if (Piece[row + i][col - i].isWhite != piece.isWhite) {
+                        isValidMove[row + i][col - i] = true;
+                    }
+                    break;
                 }
-                else{
-                    if(Piece[row + i][col-i].isWhite != piece.isWhite){
+
+            }
+
+        }
+        if (piece.type.equals("Queen")) {
+            for (int r = row + 1; r < 8; r++) {
+                if (Piece[r][col] == null) {
+                    isValidMove[r][col] = true;
+                } else {
+                    if (Piece[r][col].isWhite != piece.isWhite) {
+                        isValidMove[r][col] = true;
+                    }
+                    break;
+                }
+            }
+            // UPPP
+            for (int r = row - 1; r >= 0; r--) {
+                if (Piece[r][col] == null) {
+                    isValidMove[r][col] = true;
+                } else {
+                    if (Piece[r][col].isWhite != piece.isWhite) {
+                        isValidMove[r][col] = true;
+                    }
+                    break;
+                }
+
+            }
+            for (int c = col - 1; c >= 0; c--) {
+                if (Piece[row][c] == null) {
+                    isValidMove[row][c] = true;
+                } else {
+                    if (Piece[row][c].isWhite != piece.isWhite) {
+                        isValidMove[row][c] = true;
+                    }
+                    break;
+                }
+            }
+            // RIGHT
+            for (int c = col + 1; c < 8; c++) {
+                if (Piece[row][c] == null) {
+                    isValidMove[row][c] = true;
+                } else {
+                    if (Piece[row][col].isWhite != piece.isWhite) {
+                        isValidMove[row][c] = true;
+                    }
+                    break;
+                }
+            }
+            for (int i = 1; row + i < 8 && col + i < 8; i++) {
+                if (Piece[row + i][col + i] == null) {
+                    isValidMove[row + i][col + i] = true;
+                } else {
+                    if (Piece[row + i][col + i].isWhite != piece.isWhite) {
+                        isValidMove[row + i][col + i] = true;
+                    }
+                    break;
+                }
+            }
+            for (int i = 1; row - i >= 0 && col + i < 8; i++) {
+                if (Piece[row - i][col + i] == null) {
+                    isValidMove[row - i][col + i] = true;
+                } else {
+                    if (Piece[row - i][col + i].isWhite != piece.isWhite) {
+                        isValidMove[row - i][col + i] = true;
+                    }
+                    break;
+                }
+
+            }
+            for (int i = 1; row - i >= 0 && col - i >= 0; i++) {
+                if (Piece[row - i][col - i] == null) {
+                    isValidMove[row - i][col - i] = true;
+                } else {
+                    if (Piece[row - i][col - i].isWhite != piece.isWhite) {
+                        isValidMove[row - i][col - i] = true;
+                    }
+                    break;
+                }
+
+            }
+            for (int i = 1; row + i < 8 && col - i >= 0; i++) {
+                if (Piece[row + i][col - i] == null) {
+                    isValidMove[row + i][col - i] = true;
+                } else {
+                    if (Piece[row + i][col - i].isWhite != piece.isWhite) {
                         isValidMove[row + i][col - i] = true;
                     }
                     break;
@@ -565,50 +523,49 @@ public class Chess extends JPanel implements Runnable {
 
 
         }
-        if(piece.type.equals("Knight")){
-            if(row + 1 < 8 && col +2 <8){
-                if(Piece[row+1][col+2] == null || Piece[row+1][col+2].isWhite != piece.isWhite){
-                    isValidMove[row+1][col +2] = true;
+        if (piece.type.equals("Knight")) {
+            if (row + 1 < 8 && col + 2 < 8) {
+                if (Piece[row + 1][col + 2] == null || Piece[row + 1][col + 2].isWhite != piece.isWhite) {
+                    isValidMove[row + 1][col + 2] = true;
                 }
             }
-            if(row +2 <8 && col+1 <8){
-                if(Piece[row+2][col+1] == null || Piece[row+2][col+1].isWhite != piece.isWhite){
-                    isValidMove[row+2][col+1] = true;
+            if (row + 2 < 8 && col + 1 < 8) {
+                if (Piece[row + 2][col + 1] == null || Piece[row + 2][col + 1].isWhite != piece.isWhite) {
+                    isValidMove[row + 2][col + 1] = true;
                 }
             }
-            if(row -2 >= 0 && col -1 >= 0){
-                if(Piece[row-2][col-1] == null || Piece[row-2][col-1].isWhite != piece.isWhite){
-                    isValidMove[row-2][col-1] = true;
+            if (row - 2 >= 0 && col - 1 >= 0) {
+                if (Piece[row - 2][col - 1] == null || Piece[row - 2][col - 1].isWhite != piece.isWhite) {
+                    isValidMove[row - 2][col - 1] = true;
                 }
             }
-            if(row - 1 >= 0 && col -2 >= 0){
-                if(Piece[row-1][col-2] == null || Piece[row-1][col-2].isWhite != piece.isWhite){
-                    isValidMove[row-1][col -2] = true;
+            if (row - 1 >= 0 && col - 2 >= 0) {
+                if (Piece[row - 1][col - 2] == null || Piece[row - 1][col - 2].isWhite != piece.isWhite) {
+                    isValidMove[row - 1][col - 2] = true;
                 }
             }
-            if(row + 1 < 8 && col -2 >= 0){
-                if(Piece[row+1][col-2] == null || Piece[row+1][col-2].isWhite != piece.isWhite){
-                    isValidMove[row+1][col -2] = true;
+            if (row + 1 < 8 && col - 2 >= 0) {
+                if (Piece[row + 1][col - 2] == null || Piece[row + 1][col - 2].isWhite != piece.isWhite) {
+                    isValidMove[row + 1][col - 2] = true;
                 }
             }
-            if(row - 1 >= 0 && col +2 < 8){
-                if(Piece[row-1][col+2] == null || Piece[row-1][col+2].isWhite != piece.isWhite){
-                    isValidMove[row-1][col +2] = true;
+            if (row - 1 >= 0 && col + 2 < 8) {
+                if (Piece[row - 1][col + 2] == null || Piece[row - 1][col + 2].isWhite != piece.isWhite) {
+                    isValidMove[row - 1][col + 2] = true;
                 }
             }
-            if(row -2 >=0 && col+1 <8){
-                if(Piece[row-2][col+1] == null || Piece[row-2][col+1].isWhite != piece.isWhite){
-                    isValidMove[row-2][col+1] = true;
+            if (row - 2 >= 0 && col + 1 < 8) {
+                if (Piece[row - 2][col + 1] == null || Piece[row - 2][col + 1].isWhite != piece.isWhite) {
+                    isValidMove[row - 2][col + 1] = true;
                 }
             }
-            if(row +2 <8 && col-1 >= 0){
-                if(Piece[row+2][col-1] == null || Piece[row+2][col-1].isWhite != piece.isWhite){
-                    isValidMove[row+2][col-1] = true;
+            if (row + 2 < 8 && col - 1 >= 0) {
+                if (Piece[row + 2][col - 1] == null || Piece[row + 2][col - 1].isWhite != piece.isWhite) {
+                    isValidMove[row + 2][col - 1] = true;
                 }
             }
 
         }
-
 
 
         ///
@@ -653,107 +610,138 @@ public class Chess extends JPanel implements Runnable {
     }
 
 
-
-
     @Override
-    public void paintComponent (Graphics g){
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
 
         Graphics2D g2 = (Graphics2D) g;
         if (flipped) {
-            g2.rotate(Math.toRadians(180), getWidth() / 2.0, getHeight() / 2.0);
+            for (int i = 1; col + i < 8 && row + i < 8; i++) {
+
+
+            }
         }
         drawPiece(g2);
         drawValidMoves(g2);
-
-
+        drawAccessibility(g2);
 
 
         g2.dispose();
     }
-    public void drawValidMoves(Graphics2D g2){
+
+    public void drawValidMoves(Graphics2D g2) {
         g2.setColor(Color.white);
-        if(visibility)
-            for(int row = 0; row <8; row++){
-                for(int col = 0; col <8; col++){
-                    if(isValidMove[row][col]){
-                        int validMoveX = (col * tileSize) + (tileSize-67);
-                        int validMoveY = (row*tileSize)+ (tileSize -67);
-                        g2.fillOval(validMoveX, validMoveY, 35,35);
+        if (visibility)
+            for (int row = 0; row < 8; row++) {
+                for (int col = 0; col < 8; col++) {
+                    if (isValidMove[row][col]) {
+                        int drawCol = col;
+                        int drawRow = row;
+
+                        if (flipped) {
+                            drawCol = 7 - col;
+                            drawRow = 7 - row;
+                        }
+
+                        int x = drawCol * tileSize + (tileSize - 67);
+                        int y = drawRow * tileSize + (tileSize - 67);
+
+                        g2.fillOval(x, y, 35, 35);
+
                     }
                 }
             }
 
 
+    }
+    public void drawAccessibility(Graphics2D g2){
 
+              g2.setColor(Color.black);
+             g2.setFont(new Font("Arial", Font.BOLD, 20));
+            if(whiteTurn){
+                g2.drawString("Move : White", 815,25);
+            }
+            else{
+                g2.drawString("Move : Black", 815,25);
+
+            }
 
     }
 
 
-    public void drawPiece (Graphics2D g2){
+    public void drawPiece(Graphics2D g2) {
         int tileSize = 100;
-
 
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
 
+                int drawCol = col;
+                int drawRow = row;
 
-                // board colors
+                if (flipped) {
+                    drawCol = 7 - col;
+                    drawRow = 7 - row;
+                }
+
+                // board colors (use original row/col so pattern stays correct)
                 if ((row + col) % 2 == 0) {
                     g2.setColor(new Color(118, 150, 86));
                 } else {
                     g2.setColor(new Color(238, 238, 210));
                 }
 
-
                 if (hasSelection && row == selectedRow && col == selectedCol) {
                     g2.setColor(Color.yellow);
                 }
 
-
-                if (rightPressed) {
+                if (clicked) {
                     g2.setColor(Color.yellow);
                 }
 
-
-                g2.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
-
+                g2.fillRect(drawCol * tileSize, drawRow * tileSize, tileSize, tileSize);
 
                 Piece p = Piece[row][col];
                 if (p == null) continue;
 
-
+                // black pieces
                 if (p.type.equals("Rook") && !p.isWhite)
-                    g2.drawImage(bRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bRook, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Knight") && !p.isWhite)
-                    g2.drawImage(bKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bKnight, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Bishop") && !p.isWhite)
-                    g2.drawImage(bBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bBishop, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Queen") && !p.isWhite)
-                    g2.drawImage(bQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bQueen, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("King") && !p.isWhite)
-                    g2.drawImage(bKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bKing, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Pawn") && !p.isWhite)
-                    g2.drawImage(bPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(bPawn, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
 
-
+                // white pieces
                 if (p.type.equals("Rook") && p.isWhite)
-                    g2.drawImage(wRook, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wRook, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Knight") && p.isWhite)
-                    g2.drawImage(wKnight, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wKnight, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Bishop") && p.isWhite)
-                    g2.drawImage(wBishop, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wBishop, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Queen") && p.isWhite)
-                    g2.drawImage(wQueen, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wQueen, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("King") && p.isWhite)
-                    g2.drawImage(wKing, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wKing, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
+
                 if (p.type.equals("Pawn") && p.isWhite)
-                    g2.drawImage(wPawn, col * tileSize, row * tileSize, tileSize, tileSize, null);
+                    g2.drawImage(wPawn, drawCol * tileSize, drawRow * tileSize, tileSize, tileSize, null);
             }
         }
     }
-
-
 }
-
