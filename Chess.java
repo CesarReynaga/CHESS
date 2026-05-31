@@ -45,6 +45,8 @@ public class Chess extends JPanel implements Runnable {
     boolean whiteTurn = true;
     boolean flipped = false;
     boolean visibility = false;
+    String lastMove = "";
+    int logY = 50;
 
 
     Piece[][] Piece = new Piece[8][8];
@@ -82,6 +84,8 @@ public class Chess extends JPanel implements Runnable {
             firstMove[1][i] = true; // black pawns
             firstMove[6][i] = true; // white pawns
         }
+
+
 
 
         Piece[0][0] = new Piece("Rook", false);
@@ -177,16 +181,23 @@ public class Chess extends JPanel implements Runnable {
     public void update() {
         boolean captured;
 
-
         if (keyH.fPressed) {
             flipped = !flipped;
             keyH.fPressed = false;
             System.out.println("Flipped");
         }
 
+        if (keyH.rPressed) {
+            restart = !restart;
+            keyH.rPressed = false;
+        }
+
+        if (restart) {
+            restart(); // recommended (or replace with your reset code)
+            restart = false;
+        }
 
         if (!mouse.mousePressed) return;
-
 
         col = mouse.mouseX / tileSize;
         row = mouse.mouseY / tileSize;
@@ -196,55 +207,32 @@ public class Chess extends JPanel implements Runnable {
             row = 7 - row;
         }
 
-
         if (row < 0 || row > 7 || col < 0 || col > 7) {
             mouse.mousePressed = false;
             return;
         }
-        if (!hasSelection) {
-            if (Piece[row][col] == null) {
-                System.out.println(squares[row][col]);
-
-
-            }
-        }
-
 
         if (!hasSelection) {
-
-
             if (Piece[row][col] != null && Piece[row][col].isWhite == whiteTurn) {
-
 
                 selectedRow = row;
                 selectedCol = col;
                 hasSelection = true;
                 visibility = true;
-                initLegalMoves(Piece[row][col], row, col);
 
+                initLegalMoves(Piece[row][col], row, col);
 
                 System.out.println("Selected: " + Piece[row][col].type);
             }
-        }
-
-
-        /// MOOOVING PIECES
-
-
-        else {
-
+        } else {
 
             Piece piece = Piece[selectedRow][selectedCol];
-
 
             if (piece == null) {
                 hasSelection = false;
                 mouse.mousePressed = false;
-
-
                 return;
             }
-
 
             if (row == selectedRow && col == selectedCol) {
                 hasSelection = false;
@@ -253,53 +241,57 @@ public class Chess extends JPanel implements Runnable {
                 return;
             }
 
-
             if (isValidMove[row][col]) {
 
+                Piece movedPiece = Piece[selectedRow][selectedCol];
                 Piece temp = Piece[row][col];
 
-                Piece[row][col] = piece;
+                Piece[row][col] = movedPiece;
                 Piece[selectedRow][selectedCol] = null;
 
-                boolean inCheck = isKingChecked(piece.isWhite);
+                boolean inCheck = isKingChecked(movedPiece.isWhite);
 
                 if (inCheck) {
-                    Piece[selectedRow][selectedCol] = piece;
+                    Piece[selectedRow][selectedCol] = movedPiece;
                     Piece[row][col] = temp;
 
                     System.out.println("Illegal move (king in check)");
                 } else {
-                    if (piece.type.equals("Pawn")) {
+
+                    if (movedPiece.type.equals("Pawn")) {
                         firstMove[selectedRow][selectedCol] = false;
                     }
-                    boolean oppColor = !piece.isWhite;
-                    if(isCheckmate(oppColor)){
-                        System.out.println("CHECKMATE : " + piece.isWhite);
+
+                    boolean oppColor = !movedPiece.isWhite;
+
+                    if (isCheckmate(oppColor)) {
+                        System.out.println("CHECKMATE : " + movedPiece.isWhite);
                         gameOver = true;
                     }
 
-
                     whiteTurn = !whiteTurn;
 
+                   lastMove = logMoves(movedPiece, selectedRow, selectedCol, row, col);
 
-                    System.out.println("Moved Piece");
                 }
-
 
             } else {
                 System.out.println("Illegal Move");
             }
 
-
             hasSelection = false;
             selectedRow = -1;
             selectedCol = -1;
             visibility = false;
+            logY = logY +5;
         }
-
 
         mouse.mousePressed = false;
     }
+
+
+
+
 
     public void initLegalMoves(Piece piece, int row, int col) {
 
@@ -320,7 +312,6 @@ public class Chess extends JPanel implements Runnable {
             // down 1
             if (row + 1 < 8 && Piece[row + 1][col] == null) {
                 isValidMove[row + 1][col] = true;
-                System.out.println("move up 1");
             }
 
 
@@ -719,6 +710,62 @@ public class Chess extends JPanel implements Runnable {
         System.out.println("CHECKMATE");
             return true;
     }
+    public void restart(){
+
+
+            // clear board
+            for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 8; c++) {
+                    Piece[r][c] = null;
+                    firstMove[r][c] = false;
+                }
+            }
+
+            // reset state
+            whiteTurn = true;
+            hasSelection = false;
+            selectedRow = -1;
+            selectedCol = -1;
+            visibility = false;
+            gameOver = false;
+
+            // reset pawns first move
+            for (int i = 0; i < 8; i++) {
+                firstMove[1][i] = true;
+                firstMove[6][i] = true;
+            }
+
+            // rebuild pieces (same as constructor)
+            Piece[0][0] = new Piece("Rook", false);
+            Piece[0][1] = new Piece("Knight", false);
+            Piece[0][2] = new Piece("Bishop", false);
+            Piece[0][3] = new Piece("Queen", false);
+            Piece[0][4] = new Piece("King", false);
+            Piece[0][5] = new Piece("Bishop", false);
+            Piece[0][6] = new Piece("Knight", false);
+            Piece[0][7] = new Piece("Rook", false);
+
+            for (int i = 0; i < 8; i++) {
+                Piece[1][i] = new Piece("Pawn", false);
+                Piece[6][i] = new Piece("Pawn", true);
+            }
+
+            Piece[7][0] = new Piece("Rook", true);
+            Piece[7][1] = new Piece("Knight", true);
+            Piece[7][2] = new Piece("Bishop", true);
+            Piece[7][3] = new Piece("Queen", true);
+            Piece[7][4] = new Piece("King", true);
+            Piece[7][5] = new Piece("Bishop", true);
+            Piece[7][6] = new Piece("Knight", true);
+            Piece[7][7] = new Piece("Rook", true);
+
+    }
+    public String logMoves(Piece piece, int fromRow, int fromCol, int toRow, int toCol){
+
+
+        return piece.type + " " + squares[fromRow][fromCol] + " -> " + squares[toRow][toCol];
+    }
+
 
 
 
@@ -745,8 +792,8 @@ public class Chess extends JPanel implements Runnable {
 
             g2.setColor(Color.WHITE);
             g2.setFont(new Font("Arial", Font.BOLD, 40));
-            g2.drawString("GAME OVER", 260, 288 );
-            g2.drawString("PRESS R TO RESTART", 175, 340 );
+            g2.drawString("CHECKMATE", 350, 350 );
+            g2.drawString("PRESS R TO RESTART", 325, 450 );
         }
 
 
@@ -790,6 +837,8 @@ public class Chess extends JPanel implements Runnable {
                 g2.drawString("Move : Black", 815,25);
 
             }
+            g2.drawString(lastMove, 815,50);
+
 
     }
 
